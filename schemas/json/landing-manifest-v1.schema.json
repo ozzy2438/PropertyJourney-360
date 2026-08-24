@@ -1,0 +1,65 @@
+{
+  "additionalProperties": false,
+  "properties": {
+    "extracted_at": {
+      "format": "date-time",
+      "title": "Extracted At",
+      "type": "string"
+    },
+    "landed_at": {
+      "format": "date-time",
+      "title": "Landed At",
+      "type": "string"
+    },
+    "object_path": {
+      "title": "Object Path",
+      "type": "string"
+    },
+    "record_count": {
+      "minimum": 0,
+      "title": "Record Count",
+      "type": "integer"
+    },
+    "run_id": {
+      "title": "Run Id",
+      "type": "string"
+    },
+    "schema_version": {
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "sha256": {
+      "pattern": "^[a-f0-9]{64}$",
+      "title": "Sha256",
+      "type": "string"
+    },
+    "source": {
+      "title": "Source",
+      "type": "string"
+    },
+    "watermark": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Watermark"
+    }
+  },
+  "required": [
+    "source",
+    "run_id",
+    "schema_version",
+    "extracted_at",
+    "landed_at",
+    "watermark",
+    "record_count",
+    "sha256",
+    "object_path"
+  ],
+  "title": "LandingManifest",
+  "type": "object"
+}

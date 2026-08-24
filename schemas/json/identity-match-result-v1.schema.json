@@ -1,0 +1,138 @@
+{
+  "$defs": {
+    "MatchDecision": {
+      "description": "Permitted identity-candidate outcomes.",
+      "enum": [
+        "AUTO_MATCH",
+        "REVIEW_REQUIRED",
+        "NO_MATCH"
+      ],
+      "title": "MatchDecision",
+      "type": "string"
+    },
+    "MatchEvidence": {
+      "additionalProperties": false,
+      "description": "One explainable signal used to score an identity candidate.",
+      "properties": {
+        "comparator": {
+          "title": "Comparator",
+          "type": "string"
+        },
+        "contribution": {
+          "maximum": 1,
+          "minimum": 0,
+          "title": "Contribution",
+          "type": "number"
+        },
+        "field": {
+          "title": "Field",
+          "type": "string"
+        },
+        "left_normalized": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Left Normalized"
+        },
+        "note": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Note"
+        },
+        "right_normalized": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Right Normalized"
+        },
+        "similarity": {
+          "maximum": 1,
+          "minimum": 0,
+          "title": "Similarity",
+          "type": "number"
+        },
+        "weight": {
+          "maximum": 1,
+          "minimum": 0,
+          "title": "Weight",
+          "type": "number"
+        }
+      },
+      "required": [
+        "field",
+        "comparator",
+        "similarity",
+        "weight",
+        "contribution"
+      ],
+      "title": "MatchEvidence",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "description": "Versioned and fully explainable identity-candidate decision.",
+  "properties": {
+    "decided_at": {
+      "format": "date-time",
+      "title": "Decided At",
+      "type": "string"
+    },
+    "decision": {
+      "$ref": "#/$defs/MatchDecision"
+    },
+    "evidence": {
+      "items": {
+        "$ref": "#/$defs/MatchEvidence"
+      },
+      "title": "Evidence",
+      "type": "array"
+    },
+    "left_source_key": {
+      "title": "Left Source Key",
+      "type": "string"
+    },
+    "right_source_key": {
+      "title": "Right Source Key",
+      "type": "string"
+    },
+    "rule_version": {
+      "title": "Rule Version",
+      "type": "string"
+    },
+    "score": {
+      "maximum": 1,
+      "minimum": 0,
+      "title": "Score",
+      "type": "number"
+    }
+  },
+  "required": [
+    "left_source_key",
+    "right_source_key",
+    "score",
+    "decision",
+    "rule_version",
+    "evidence"
+  ],
+  "title": "MatchResult",
+  "type": "object"
+}

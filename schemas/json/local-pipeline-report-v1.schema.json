@@ -1,0 +1,367 @@
+{
+  "$defs": {
+    "ClusterMetrics": {
+      "additionalProperties": false,
+      "properties": {
+        "evaluated_pairs": {
+          "minimum": 0,
+          "title": "Evaluated Pairs",
+          "type": "integer"
+        },
+        "f1": {
+          "maximum": 1,
+          "minimum": 0,
+          "title": "F1",
+          "type": "number"
+        },
+        "false_negatives": {
+          "minimum": 0,
+          "title": "False Negatives",
+          "type": "integer"
+        },
+        "false_positive_merges": {
+          "minimum": 0,
+          "title": "False Positive Merges",
+          "type": "integer"
+        },
+        "precision": {
+          "maximum": 1,
+          "minimum": 0,
+          "title": "Precision",
+          "type": "number"
+        },
+        "recall": {
+          "maximum": 1,
+          "minimum": 0,
+          "title": "Recall",
+          "type": "number"
+        },
+        "true_negatives": {
+          "minimum": 0,
+          "title": "True Negatives",
+          "type": "integer"
+        },
+        "true_positives": {
+          "minimum": 0,
+          "title": "True Positives",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "evaluated_pairs",
+        "true_positives",
+        "false_positive_merges",
+        "false_negatives",
+        "true_negatives",
+        "precision",
+        "recall",
+        "f1"
+      ],
+      "title": "ClusterMetrics",
+      "type": "object"
+    },
+    "IdentityMetrics": {
+      "additionalProperties": false,
+      "properties": {
+        "evaluated_pairs": {
+          "minimum": 0,
+          "title": "Evaluated Pairs",
+          "type": "integer"
+        },
+        "f1": {
+          "maximum": 1,
+          "minimum": 0,
+          "title": "F1",
+          "type": "number"
+        },
+        "false_negatives": {
+          "minimum": 0,
+          "title": "False Negatives",
+          "type": "integer"
+        },
+        "false_positive_merges": {
+          "minimum": 0,
+          "title": "False Positive Merges",
+          "type": "integer"
+        },
+        "manual_review_pairs": {
+          "minimum": 0,
+          "title": "Manual Review Pairs",
+          "type": "integer"
+        },
+        "manual_review_rate": {
+          "maximum": 1,
+          "minimum": 0,
+          "title": "Manual Review Rate",
+          "type": "number"
+        },
+        "precision": {
+          "maximum": 1,
+          "minimum": 0,
+          "title": "Precision",
+          "type": "number"
+        },
+        "recall": {
+          "maximum": 1,
+          "minimum": 0,
+          "title": "Recall",
+          "type": "number"
+        },
+        "true_negatives": {
+          "minimum": 0,
+          "title": "True Negatives",
+          "type": "integer"
+        },
+        "true_positives": {
+          "minimum": 0,
+          "title": "True Positives",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "evaluated_pairs",
+        "true_positives",
+        "false_positive_merges",
+        "false_negatives",
+        "true_negatives",
+        "manual_review_pairs",
+        "precision",
+        "recall",
+        "f1",
+        "manual_review_rate"
+      ],
+      "title": "IdentityMetrics",
+      "type": "object"
+    },
+    "LandingManifest": {
+      "additionalProperties": false,
+      "properties": {
+        "extracted_at": {
+          "format": "date-time",
+          "title": "Extracted At",
+          "type": "string"
+        },
+        "landed_at": {
+          "format": "date-time",
+          "title": "Landed At",
+          "type": "string"
+        },
+        "object_path": {
+          "title": "Object Path",
+          "type": "string"
+        },
+        "record_count": {
+          "minimum": 0,
+          "title": "Record Count",
+          "type": "integer"
+        },
+        "run_id": {
+          "title": "Run Id",
+          "type": "string"
+        },
+        "schema_version": {
+          "title": "Schema Version",
+          "type": "string"
+        },
+        "sha256": {
+          "pattern": "^[a-f0-9]{64}$",
+          "title": "Sha256",
+          "type": "string"
+        },
+        "source": {
+          "title": "Source",
+          "type": "string"
+        },
+        "watermark": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Watermark"
+        }
+      },
+      "required": [
+        "source",
+        "run_id",
+        "schema_version",
+        "extracted_at",
+        "landed_at",
+        "watermark",
+        "record_count",
+        "sha256",
+        "object_path"
+      ],
+      "title": "LandingManifest",
+      "type": "object"
+    },
+    "ReconciliationCounts": {
+      "additionalProperties": false,
+      "properties": {
+        "accepted": {
+          "minimum": 0,
+          "title": "Accepted",
+          "type": "integer"
+        },
+        "explained_duplicates": {
+          "minimum": 0,
+          "title": "Explained Duplicates",
+          "type": "integer"
+        },
+        "quarantined": {
+          "minimum": 0,
+          "title": "Quarantined",
+          "type": "integer"
+        },
+        "rejected": {
+          "minimum": 0,
+          "title": "Rejected",
+          "type": "integer"
+        },
+        "source": {
+          "minimum": 0,
+          "title": "Source",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "source",
+        "accepted",
+        "quarantined",
+        "rejected",
+        "explained_duplicates"
+      ],
+      "title": "ReconciliationCounts",
+      "type": "object"
+    },
+    "ReconciliationResult": {
+      "additionalProperties": false,
+      "properties": {
+        "checked_at": {
+          "format": "date-time",
+          "title": "Checked At",
+          "type": "string"
+        },
+        "counts": {
+          "$ref": "#/$defs/ReconciliationCounts"
+        },
+        "dataset": {
+          "title": "Dataset",
+          "type": "string"
+        },
+        "explanation": {
+          "title": "Explanation",
+          "type": "string"
+        },
+        "run_id": {
+          "title": "Run Id",
+          "type": "string"
+        },
+        "status": {
+          "$ref": "#/$defs/ReconciliationStatus"
+        }
+      },
+      "required": [
+        "run_id",
+        "dataset",
+        "status",
+        "counts",
+        "checked_at",
+        "explanation"
+      ],
+      "title": "ReconciliationResult",
+      "type": "object"
+    },
+    "ReconciliationStatus": {
+      "enum": [
+        "PASSED",
+        "FAILED"
+      ],
+      "title": "ReconciliationStatus",
+      "type": "string"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "canonical_customer_count": {
+      "minimum": 1,
+      "title": "Canonical Customer Count",
+      "type": "integer"
+    },
+    "cluster_conflict_count": {
+      "minimum": 0,
+      "title": "Cluster Conflict Count",
+      "type": "integer"
+    },
+    "customer_journey_event_count": {
+      "minimum": 0,
+      "title": "Customer Journey Event Count",
+      "type": "integer"
+    },
+    "evidence_scope": {
+      "title": "Evidence Scope",
+      "type": "string"
+    },
+    "generated_at": {
+      "format": "date-time",
+      "title": "Generated At",
+      "type": "string"
+    },
+    "held_out_cluster_metrics": {
+      "$ref": "#/$defs/ClusterMetrics"
+    },
+    "held_out_pair_metrics": {
+      "$ref": "#/$defs/IdentityMetrics"
+    },
+    "landing_manifest": {
+      "$ref": "#/$defs/LandingManifest"
+    },
+    "reconciliation": {
+      "$ref": "#/$defs/ReconciliationResult"
+    },
+    "run_id": {
+      "title": "Run Id",
+      "type": "string"
+    },
+    "seed": {
+      "title": "Seed",
+      "type": "integer"
+    },
+    "source_identity_count": {
+      "minimum": 1,
+      "title": "Source Identity Count",
+      "type": "integer"
+    },
+    "source_tree_sha256": {
+      "pattern": "^[a-f0-9]{64}$",
+      "title": "Source Tree Sha256",
+      "type": "string"
+    },
+    "synthetic_customer_count": {
+      "minimum": 1,
+      "title": "Synthetic Customer Count",
+      "type": "integer"
+    }
+  },
+  "required": [
+    "run_id",
+    "source_tree_sha256",
+    "seed",
+    "synthetic_customer_count",
+    "source_identity_count",
+    "canonical_customer_count",
+    "held_out_pair_metrics",
+    "held_out_cluster_metrics",
+    "cluster_conflict_count",
+    "reconciliation",
+    "landing_manifest",
+    "customer_journey_event_count",
+    "generated_at",
+    "evidence_scope"
+  ],
+  "title": "LocalPipelineReport",
+  "type": "object"
+}

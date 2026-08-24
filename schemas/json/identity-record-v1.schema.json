@@ -1,0 +1,158 @@
+{
+  "$defs": {
+    "SourceSystem": {
+      "description": "Operational sources that can contribute a private customer identity.",
+      "enum": [
+        "salesforce",
+        "legacy_crm",
+        "support",
+        "web"
+      ],
+      "title": "SourceSystem",
+      "type": "string"
+    }
+  },
+  "additionalProperties": false,
+  "description": "A source identity before canonicalisation.\n\n``truth_customer_id`` exists only in synthetic/evaluation datasets and must not be used by\nmatching logic.",
+  "properties": {
+    "address_line": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Address Line"
+    },
+    "attributes": {
+      "additionalProperties": true,
+      "title": "Attributes",
+      "type": "object"
+    },
+    "email": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Email"
+    },
+    "email_verified": {
+      "default": false,
+      "title": "Email Verified",
+      "type": "boolean"
+    },
+    "first_name": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "First Name"
+    },
+    "last_name": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Last Name"
+    },
+    "phone": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Phone"
+    },
+    "postcode": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Postcode"
+    },
+    "source_record_id": {
+      "maxLength": 256,
+      "minLength": 1,
+      "title": "Source Record Id",
+      "type": "string"
+    },
+    "source_system": {
+      "$ref": "#/$defs/SourceSystem"
+    },
+    "source_updated_at": {
+      "format": "date-time",
+      "title": "Source Updated At",
+      "type": "string"
+    },
+    "suburb": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Suburb"
+    },
+    "trusted_cross_system_id": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Trusted Cross System Id"
+    },
+    "truth_customer_id": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Truth Customer Id"
+    }
+  },
+  "required": [
+    "source_system",
+    "source_record_id",
+    "source_updated_at"
+  ],
+  "title": "IdentityRecord",
+  "type": "object"
+}

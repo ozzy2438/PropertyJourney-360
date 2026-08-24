@@ -1,0 +1,250 @@
+{
+  "report_version": 1,
+  "generated_at": "2026-08-24T03:59:52.788772Z",
+  "environment": "local-docker",
+  "python_version": "containerised Python 3.12 / host evidence runner",
+  "source_tree_sha256": "952f2939200b9055ac2ae1a3750b1a75e94aa4fc16841893c1058477649f93a7",
+  "checks": [
+    {
+      "name": "compose_config",
+      "command": [
+        "docker",
+        "compose",
+        "config",
+        "--quiet"
+      ],
+      "exit_code": 0,
+      "duration_seconds": 0.138782,
+      "output_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "output_tail": ""
+    },
+    {
+      "name": "compose_services",
+      "command": [
+        "docker",
+        "compose",
+        "ps",
+        "--services",
+        "--status",
+        "running"
+      ],
+      "exit_code": 0,
+      "duration_seconds": 0.072963,
+      "output_sha256": "1a03c6f897c77085fa13e6c2d2cdc246662eba784c9e32c2c617f357ed446ded",
+      "output_tail": "airflow-api-server\nairflow-dag-processor\nairflow-scheduler\napi\npostgres"
+    },
+    {
+      "name": "api_health",
+      "command": [
+        "curl",
+        "--fail",
+        "--silent",
+        "--show-error",
+        "http://127.0.0.1:18081/health"
+      ],
+      "exit_code": 0,
+      "duration_seconds": 0.008517,
+      "output_sha256": "a9c24c62ef9bf78d2362d292b3990eaf962b328a6c22d1cbafa8d2d91f4ef490",
+      "output_tail": "{\"status\":\"ok\",\"liveness\":\"ok\",\"readiness\":\"ok\"}"
+    },
+    {
+      "name": "airflow_health",
+      "command": [
+        "curl",
+        "--fail",
+        "--silent",
+        "--show-error",
+        "http://127.0.0.1:18082/api/v2/monitor/health"
+      ],
+      "exit_code": 0,
+      "duration_seconds": 0.010592,
+      "output_sha256": "09b3d7a2762853cd43eb27c915b968e2c360a30e5f0f2dc14a0ee1ff2b39f84e",
+      "output_tail": "{\"metadatabase\":{\"status\":\"healthy\"},\"scheduler\":{\"status\":\"healthy\",\"latest_scheduler_heartbeat\":\"2026-08-24T03:59:28.414173+00:00\"},\"triggerer\":{\"status\":null,\"latest_triggerer_heartbeat\":null},\"dag_processor\":{\"status\":\"healthy\",\"latest_dag_processor_heartbeat\":\"2026-08-24T03:59:29.694096+00:00\"}}"
+    },
+    {
+      "name": "airflow_dags",
+      "command": [
+        "docker",
+        "compose",
+        "exec",
+        "-T",
+        "airflow-scheduler",
+        "airflow",
+        "dags",
+        "list",
+        "--output",
+        "json"
+      ],
+      "exit_code": 0,
+      "duration_seconds": 1.212018,
+      "output_sha256": "57b21287e09095579ece7b1a6c67341645c6e89a6bc7c41f3e1a6208ea55910d",
+      "output_tail": "[{\"dag_id\": \"propertyjourney_customer_360\", \"fileloc\": \"/opt/airflow/dags/propertyjourney_customer_360.py\", \"owners\": [\"data-platform\"], \"is_paused\": \"True\", \"bundle_name\": \"dags-folder\", \"bundle_version\": null}, {\"dag_id\": \"propertyjourney_events\", \"fileloc\": \"/opt/airflow/dags/propertyjourney_events.py\", \"owners\": [\"data-platform\"], \"is_paused\": \"True\", \"bundle_name\": \"dags-folder\", \"bundle_version\": null}]"
+    },
+    {
+      "name": "dbt_parse",
+      "command": [
+        "docker",
+        "compose",
+        "exec",
+        "-T",
+        "-e",
+        "DBT_BIGQUERY_PROJECT=propertyjourney360-ci",
+        "-e",
+        "DBT_BIGQUERY_DATASET=propertyjourney_ci",
+        "-e",
+        "DBT_BIGQUERY_LOCATION=australia-southeast1",
+        "airflow-scheduler",
+        "/opt/dbt-venv/bin/dbt",
+        "--log-path",
+        "/opt/airflow/logs/pj360-dbt-evidence-logs",
+        "parse",
+        "--project-dir",
+        "/opt/airflow/dbt",
+        "--profiles-dir",
+        "/opt/airflow/dbt",
+        "--target-path",
+        "/opt/airflow/logs/pj360-dbt-evidence-target",
+        "--target",
+        "dev",
+        "--no-partial-parse"
+      ],
+      "exit_code": 0,
+      "duration_seconds": 3.940496,
+      "output_sha256": "22a1dfe1845a7ba0e988758b2c603f0f60064f07de15bfee3cca32cb90f811d5",
+      "output_tail": "\u001b[0m03:59:40  Running with dbt=1.12.3\n\u001b[0m03:59:41  Registered adapter: bigquery=1.12.0\n\u001b[0m03:59:42  Performance info: /opt/airflow/logs/pj360-dbt-evidence-target/perf_info.json"
+    },
+    {
+      "name": "terraform_validate",
+      "command": [
+        "docker",
+        "run",
+        "--rm",
+        "-v",
+        "/Users/osmanorka/PropertyJourney-360/infra/terraform:/workspace",
+        "-w",
+        "/workspace",
+        "hashicorp/terraform:1.15.9",
+        "validate"
+      ],
+      "exit_code": 0,
+      "duration_seconds": 0.629078,
+      "output_sha256": "bb2a672808b16eabc26cce078f4e3c5b49b27b6e7beb43fc7119e15a6fe3ed1a",
+      "output_tail": "\u001b[32m\u001b[1mSuccess!\u001b[0m The configuration is valid.\n\u001b[0m"
+    },
+    {
+      "name": "postgres_seed_counts",
+      "command": [
+        "docker",
+        "compose",
+        "exec",
+        "-T",
+        "postgres",
+        "psql",
+        "-U",
+        "pj360",
+        "-d",
+        "propertyjourney360",
+        "-Atqc",
+        "SELECT json_build_object('legacy_customers',(SELECT count(*) FROM legacy.customer),'support_customers',(SELECT count(*) FROM support.customer),'support_cases',(SELECT count(*) FROM support.case_record),'consent_events',(SELECT count(*) FROM marketing.consent_history),'orphan_support_cases',(SELECT count(*) FROM support.case_record AS cases LEFT JOIN support.customer AS customers ON cases.customer_source_record_id = customers.source_record_id WHERE customers.source_record_id IS NULL));"
+      ],
+      "exit_code": 0,
+      "duration_seconds": 0.120587,
+      "output_sha256": "8e7160a394a45332857e2e46b24143605b8e23b006aac30ad9557d04012bdee5",
+      "output_tail": "{\"legacy_customers\" : 125, \"support_customers\" : 100, \"support_cases\" : 101, \"consent_events\" : 112, \"orphan_support_cases\" : 1}"
+    },
+    {
+      "name": "api_image",
+      "command": [
+        "docker",
+        "image",
+        "inspect",
+        "propertyjourney360-api:local",
+        "--format",
+        "{{.Id}}"
+      ],
+      "exit_code": 0,
+      "duration_seconds": 0.021096,
+      "output_sha256": "6ef07677c31b3447c6733547810f105ee1376b085b2b5bd6c95923beebe423a8",
+      "output_tail": "sha256:94dae27d707baa2795d3ce25d2c4a8d57044750bc1fbef1d93e7df16267c7b46"
+    },
+    {
+      "name": "gitleaks_worktree",
+      "command": [
+        "gitleaks",
+        "dir",
+        "--redact",
+        "--no-banner",
+        "--config",
+        ".gitleaks.toml",
+        "."
+      ],
+      "exit_code": 0,
+      "duration_seconds": 0.973383,
+      "output_sha256": "29b8302c5b53d4b971e9838b7e6e63073d3b6a3604c0451c97ec2615cc3acc13",
+      "output_tail": "1:59PM INF scanned ~5773317 bytes (5.77 MB) in 927ms\n1:59PM INF no leaks found"
+    },
+    {
+      "name": "locked_dependency_audit",
+      "command": [
+        "docker",
+        "run",
+        "--rm",
+        "-v",
+        "/Users/osmanorka/PropertyJourney-360:/workspace:ro",
+        "-w",
+        "/workspace",
+        "python:3.12.14-slim-bookworm@sha256:a116514e19457bcb7af7efe9c3dd0b9b71e85b317694e7882a1c52aa15a78134",
+        "sh",
+        "-c",
+        "python -m pip install --disable-pip-version-check --root-user-action=ignore --no-deps uv==0.12.5 >/dev/null && uv export --quiet --locked --all-extras --no-emit-project --format requirements.txt",
+        "|",
+        "/Users/osmanorka/PropertyJourney-360/.venv/bin/pip-audit",
+        "--strict",
+        "--require-hashes",
+        "--requirement",
+        "/dev/stdin"
+      ],
+      "exit_code": 0,
+      "duration_seconds": 7.099593,
+      "output_sha256": "0d20dedb7dece9743f53ad72756a8ee62ab8f40b3384065d33c2c669a0b9d390",
+      "output_tail": "No known vulnerabilities found"
+    }
+  ],
+  "claims": [
+    {
+      "claim_id": "local_platform_gates",
+      "description": "Compose, API, Airflow, dbt parse, Terraform and secret scan gates.",
+      "level": "LOCALLY_VERIFIED",
+      "target": "all exit codes 0",
+      "actual": "all exit codes 0",
+      "evidence_status": "PASSED",
+      "limitation": "Local services and static validation are not GCP runtime proof."
+    },
+    {
+      "claim_id": "synthetic_postgres_seed",
+      "description": "Deterministic operational-source row counts observed in local PostgreSQL.",
+      "level": "LOCALLY_VERIFIED",
+      "target": "repeatable non-zero source records with intentional defects",
+      "actual": "{\"consent_events\": 112, \"legacy_customers\": 125, \"orphan_support_cases\": 1, \"support_cases\": 101, \"support_customers\": 100}",
+      "evidence_status": "MEASURED",
+      "limitation": "Synthetic records only; no private real-customer data."
+    }
+  ],
+  "measurements": {
+    "running_services": [
+      "airflow-api-server",
+      "airflow-dag-processor",
+      "airflow-scheduler",
+      "api",
+      "postgres"
+    ],
+    "postgres_row_counts": {
+      "legacy_customers": 125,
+      "support_customers": 100,
+      "support_cases": 101,
+      "consent_events": 112,
+      "orphan_support_cases": 1
+    },
+    "api_image_id": "sha256:94dae27d707baa2795d3ce25d2c4a8d57044750bc1fbef1d93e7df16267c7b46"
+  }
+}

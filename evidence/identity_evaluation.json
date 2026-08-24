@@ -1,0 +1,56 @@
+{
+  "report_version": 1,
+  "generated_at": "2026-08-24T03:47:49.333639Z",
+  "ruleset_version": "identity-v1.1.0",
+  "evaluation_seed": 20260825,
+  "total_synthetic_customers": 1000,
+  "held_out_customer_count": 200,
+  "held_out_source_identity_count": 653,
+  "pair_metrics": {
+    "evaluated_pairs": 212878,
+    "true_positives": 726,
+    "false_positive_merges": 0,
+    "false_negatives": 33,
+    "true_negatives": 212119,
+    "manual_review_pairs": 389,
+    "precision": 1.0,
+    "recall": 0.956522,
+    "f1": 0.977778,
+    "manual_review_rate": 0.001827
+  },
+  "cluster_metrics": {
+    "evaluated_pairs": 212878,
+    "true_positives": 745,
+    "false_positive_merges": 0,
+    "false_negatives": 14,
+    "true_negatives": 212119,
+    "precision": 1.0,
+    "recall": 0.981555,
+    "f1": 0.990691
+  },
+  "cluster_conflict_count": 0,
+  "cluster_precision_interval_95": {
+    "confidence": 0.95,
+    "lower": 0.99487,
+    "upper": 1.0,
+    "method": "Wilson score"
+  },
+  "cluster_recall_interval_95": {
+    "confidence": 0.95,
+    "lower": 0.969278,
+    "upper": 0.988981,
+    "method": "Wilson score"
+  },
+  "source_hashes": {
+    "config/identity_rules.yml": "e065a9835791d679da3a86964f3e3b9eae0f01faa2c341144678a1efd372a105",
+    "scripts/evaluate_identity.py": "d3ad8159c62951c71831b024a6e46c396670cf92827119f2960b61d8af570b5b",
+    "src/propertyjourney360/identity/matcher.py": "c0092cecc1ba6fb35b7260ea19eb9876dcf25e21429ce9604a83edcc13475335",
+    "src/propertyjourney360/identity/normalization.py": "438097d6dbe52009d2969cd66fdf0732c16cb2bf0f56e29b865c46785c9cdbe4",
+    "src/propertyjourney360/synthetic/identities.py": "bc6e4cbe4ae44ecb616dfe311568948c84310e86597b3e18181151753320139f"
+  },
+  "target_precision": 0.99,
+  "target_recall": 0.95,
+  "target_status": "PASSED",
+  "evidence_level": "LOCALLY_VERIFIED",
+  "scope_limitation": "Deterministic synthetic held-out evidence; does not establish real-world or cloud identity performance."
+}

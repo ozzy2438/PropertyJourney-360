@@ -1,0 +1,53 @@
+{
+  "report_version": 1,
+  "generated_at": "2026-08-24T03:47:53.670012Z",
+  "catalog_sha256": "9175ac022bb8aad1ea134664a4e9c5f8aa40b999c3a8ab115b81c8e4d3e51207",
+  "catalog_terms_checked_at": "2026-08-24",
+  "observations": [
+    {
+      "source_id": "melbourne_clue_business_context",
+      "publisher": "City of Melbourne",
+      "retrieved_at": "2026-08-24T03:16:30.261029Z",
+      "byte_count": 142067,
+      "response_record_count": null,
+      "sha256": "571dc26325283f650d6ee3669f8b2855c63f914334df977e3f27cca0eaca7072",
+      "licence_name": "Creative Commons Attribution 4.0 International",
+      "licence_url": "https://creativecommons.org/licenses/by/4.0/",
+      "attribution_text": "Contains City of Melbourne CLUE data licensed under CC BY 4.0.",
+      "limitations": [
+        "Cells containing two or fewer establishments may be suppressed."
+      ]
+    },
+    {
+      "source_id": "rba_f1_interest_rates",
+      "publisher": "Reserve Bank of Australia",
+      "retrieved_at": "2026-08-24T03:16:30.106094Z",
+      "byte_count": 305285,
+      "response_record_count": null,
+      "sha256": "98207e58e64200903b8913b00da104c5fedd424add541975ee7431784b6b09fe",
+      "licence_name": "RBA Copyright and Disclaimer Notice",
+      "licence_url": "https://www.rba.gov.au/copyright/",
+      "attribution_text": "Source: Reserve Bank of Australia; no endorsement implied.",
+      "limitations": [
+        "Capture vintage because series can be revised or withdrawn."
+      ]
+    },
+    {
+      "source_id": "vicmap_address",
+      "publisher": "Department of Transport and Planning, Victoria",
+      "retrieved_at": "2026-08-24T03:17:04.169602Z",
+      "byte_count": 5443,
+      "response_record_count": 25,
+      "sha256": "1aaa7ef5b1f109ce9ed2016a48f34c45355a59b9b75a19c80ccd313dc88049b9",
+      "licence_name": "Creative Commons Attribution 4.0 International",
+      "licence_url": "https://creativecommons.org/licenses/by/4.0/",
+      "attribution_text": "Contains Victorian Government data licensed under CC BY 4.0.",
+      "limitations": [
+        "Preserve source identifiers and weekly retrieval vintage.",
+        "One explicitly filtered ArcGIS page; not a statewide completeness claim."
+      ]
+    }
+  ],
+  "evidence_level": "LOCALLY_VERIFIED",
+  "scope_limitation": "HTTP acquisition and local content hashes only; not GCS or BigQuery runtime evidence. Raw records remain outside Git and source licences continue to apply."
+}

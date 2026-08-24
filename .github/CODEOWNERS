@@ -1,0 +1,7 @@
+# Deployment and trust-boundary changes require the repository owner.
+/.github/workflows/ @ozzy2438
+/Dockerfile @ozzy2438
+/compose.yaml @ozzy2438
+/docker/ @ozzy2438
+/infra/ @ozzy2438
+/.gitleaks.toml @ozzy2438

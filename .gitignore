@@ -25,5 +25,6 @@ crash.log
 dbt/target/
 dbt/logs/
 dbt/dbt_packages/
+dbt/.user.yml
+.github/dbt/.user.yml
 airflow/logs/
-

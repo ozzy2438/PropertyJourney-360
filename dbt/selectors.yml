@@ -1,0 +1,17 @@
+selectors:
+  - name: customer_360_batch
+    description: Build the trusted Customer 360 and all required upstream models.
+    definition:
+      method: path
+      value: models/marts/customer_360_current.sql
+      parents: true
+  - name: behavioural_features
+    description: Rebuild event attribution and downstream engagement features.
+    definition:
+      union:
+        - method: path
+          value: models/core/fact_customer_property_interaction.sql
+          parents: true
+        - method: path
+          value: models/marts/mart_personalisation_features.sql
+          parents: true

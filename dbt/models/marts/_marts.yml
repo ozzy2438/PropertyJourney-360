@@ -1,0 +1,101 @@
+version: 2
+
+models:
+  - name: mart_customer_engagement
+    description: Current behavioural and support engagement metrics at one row per canonical customer.
+    config: {contract: {enforced: true}}
+    columns:
+      - name: customer_id
+        data_type: string
+        data_tests:
+          - not_null
+          - unique
+          - relationships:
+              arguments: {to: "ref('dim_customer')", field: customer_id}
+      - {name: interactions_7d, data_type: int64, data_tests: [not_null]}
+      - {name: interactions_30d, data_type: int64, data_tests: [not_null]}
+      - {name: interactions_90d, data_type: int64, data_tests: [not_null]}
+      - {name: views_7d, data_type: int64, data_tests: [not_null]}
+      - {name: views_30d, data_type: int64, data_tests: [not_null]}
+      - {name: saved_properties_30d, data_type: int64, data_tests: [not_null]}
+      - {name: enquiries_30d, data_type: int64, data_tests: [not_null]}
+      - {name: sessions_30d, data_type: int64, data_tests: [not_null]}
+      - {name: last_activity_at, data_type: timestamp}
+      - {name: open_support_cases, data_type: int64, data_tests: [not_null]}
+      - {name: support_cases_90d, data_type: int64, data_tests: [not_null]}
+      - {name: engagement_score, data_type: int64, data_tests: [not_null]}
+
+  - name: customer_360_current
+    description: Trusted current Customer 360 contract for internal analytics and API consumers.
+    config: {contract: {enforced: true}}
+    columns:
+      - name: customer_id
+        data_type: string
+        data_tests:
+          - not_null
+          - unique
+          - relationships:
+              arguments: {to: "ref('dim_customer')", field: customer_id}
+      - {name: first_name, data_type: string}
+      - {name: last_name, data_type: string}
+      - {name: full_name, data_type: string}
+      - {name: email, data_type: string}
+      - {name: phone, data_type: string}
+      - {name: address_line_1, data_type: string}
+      - {name: suburb, data_type: string}
+      - {name: state, data_type: string}
+      - {name: postcode, data_type: string}
+      - {name: source_systems, data_type: "array<string>"}
+      - {name: identity_source_count, data_type: int64}
+      - {name: account_ids, data_type: "array<string>"}
+      - name: email_consent_status
+        data_type: string
+        data_tests:
+          - accepted_values:
+              arguments: {values: ['GRANTED', 'REVOKED', 'UNKNOWN']}
+      - name: sms_consent_status
+        data_type: string
+        data_tests:
+          - accepted_values:
+              arguments: {values: ['GRANTED', 'REVOKED', 'UNKNOWN']}
+      - name: push_consent_status
+        data_type: string
+        data_tests:
+          - accepted_values:
+              arguments: {values: ['GRANTED', 'REVOKED', 'UNKNOWN']}
+      - {name: consent_updated_at, data_type: timestamp}
+      - {name: interactions_30d, data_type: int64}
+      - {name: views_30d, data_type: int64}
+      - {name: saved_properties_30d, data_type: int64}
+      - {name: enquiries_30d, data_type: int64}
+      - {name: last_activity_at, data_type: timestamp}
+      - {name: open_support_cases, data_type: int64}
+      - {name: engagement_score, data_type: int64}
+      - {name: personalisation_allowed, data_type: bool, data_tests: [not_null]}
+      - {name: record_updated_at, data_type: timestamp, data_tests: [not_null]}
+      - {name: profile_as_of_at, data_type: timestamp, data_tests: [not_null]}
+
+  - name: mart_personalisation_features
+    description: Consent-gated, ML-ready behavioural features; revoked or unknown consent produces suppressed values.
+    config: {contract: {enforced: true}}
+    columns:
+      - name: customer_id
+        data_type: string
+        data_tests:
+          - not_null
+          - unique
+          - relationships:
+              arguments: {to: "ref('customer_360_current')", field: customer_id}
+      - {name: eligible_for_personalisation, data_type: bool, data_tests: [not_null]}
+      - {name: views_7d, data_type: int64, data_tests: [not_null]}
+      - {name: views_30d, data_type: int64, data_tests: [not_null]}
+      - {name: saved_properties_30d, data_type: int64, data_tests: [not_null]}
+      - {name: enquiries_30d, data_type: int64, data_tests: [not_null]}
+      - {name: preferred_suburbs, data_type: "array<string>", data_tests: [not_null]}
+      - {name: preferred_property_type, data_type: string}
+      - {name: observed_price_min, data_type: numeric}
+      - {name: observed_price_max, data_type: numeric}
+      - {name: last_activity_at, data_type: timestamp}
+      - {name: engagement_frequency, data_type: float64, data_tests: [not_null]}
+      - {name: engagement_score, data_type: int64, data_tests: [not_null]}
+      - {name: feature_as_of_at, data_type: timestamp, data_tests: [not_null]}

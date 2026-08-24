@@ -19,6 +19,8 @@ _GENERATED_EVIDENCE = {
     Path("evidence/local_pipeline_validation.json"),
     Path("evidence/platform_validation.json"),
     Path("evidence/coverage.json"),
+    Path("evidence/identity_evaluation.json"),
+    Path("evidence/public_source_validation.json"),
 }
 
 

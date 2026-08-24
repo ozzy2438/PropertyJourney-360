@@ -88,6 +88,18 @@ resource "google_storage_bucket_iam_member" "raw_ingest_viewer" {
   member = "serviceAccount:${google_service_account.workload["ingest"].email}"
 }
 
+resource "google_storage_bucket_iam_member" "raw_event_consumer_creator" {
+  bucket = google_storage_bucket.raw.name
+  role   = "roles/storage.objectCreator"
+  member = "serviceAccount:${google_service_account.workload["event_consumer"].email}"
+}
+
+resource "google_storage_bucket_iam_member" "raw_event_consumer_viewer" {
+  bucket = google_storage_bucket.raw.name
+  role   = "roles/storage.objectViewer"
+  member = "serviceAccount:${google_service_account.workload["event_consumer"].email}"
+}
+
 resource "google_storage_bucket_iam_member" "raw_transform_viewer" {
   bucket = google_storage_bucket.raw.name
   role   = "roles/storage.objectViewer"

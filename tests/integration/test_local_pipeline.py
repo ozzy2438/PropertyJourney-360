@@ -1,5 +1,6 @@
 from pathlib import Path
 
+from propertyjourney360.api.repository import CustomerRepository
 from propertyjourney360.pipeline import run_local_pipeline
 
 
@@ -28,3 +29,20 @@ def test_local_pipeline_is_reconcilable_and_idempotent(tmp_path: Path) -> None:
     assert first.customer_journey_event_count == second.customer_journey_event_count == 3
     assert first.held_out_pair_metrics.false_positive_merges == 0
     assert first.held_out_cluster_metrics.false_positive_merges == 0
+
+    repository = CustomerRepository(database)
+    quarantined = repository.list_remediation(limit=1000, offset=0)
+    assert len(quarantined) == first.reconciliation.counts.quarantined
+    for item in quarantined:
+        assert (
+            repository.customer_for_source(
+                source_system=item["source_system"],
+                source_record_id=item["source_record_id"],
+            )
+            is None
+        )
+    with repository.connect() as connection:
+        curated_identity_count = connection.execute(
+            "SELECT count(*) FROM customer_identity_source"
+        ).fetchone()[0]
+    assert curated_identity_count == first.reconciliation.counts.accepted

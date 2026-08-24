@@ -1,9 +1,9 @@
 {
   "report_version": 1,
-  "generated_at": "2026-08-24T03:59:38.472801Z",
+  "generated_at": "2026-08-24T07:25:24.186757Z",
   "environment": "local",
   "python_version": "3.12.14",
-  "source_tree_sha256": "952f2939200b9055ac2ae1a3750b1a75e94aa4fc16841893c1058477649f93a7",
+  "source_tree_sha256": "010048acb967c348f6aea985e385416321895ff392039c3dc062868342fe1b1a",
   "checks": [
     {
       "name": "ruff",
@@ -15,7 +15,7 @@
         "."
       ],
       "exit_code": 0,
-      "duration_seconds": 0.050224,
+      "duration_seconds": 0.074789,
       "output_sha256": "f0d0b1081d9d3ebb26c4c93543053ecdc0a58998f22c071dc4ddb26021b57645",
       "output_tail": "All checks passed!"
     },
@@ -30,9 +30,9 @@
         "."
       ],
       "exit_code": 0,
-      "duration_seconds": 0.023372,
-      "output_sha256": "4132b8ecd83c5cd0e2b594120afadad6e8a227214161497a0cbf8d702f815789",
-      "output_tail": "84 files already formatted"
+      "duration_seconds": 0.032429,
+      "output_sha256": "8e3bb54feea6043dfb32a5c6d1d70b30ed815ea686970ad1755b8544a05d8316",
+      "output_tail": "93 files already formatted"
     },
     {
       "name": "mypy",
@@ -43,9 +43,9 @@
         "src"
       ],
       "exit_code": 0,
-      "duration_seconds": 0.208736,
-      "output_sha256": "f948243de639409228dd4bee63b27f24b14f54c40abe7bc306836ead628b67b0",
-      "output_tail": "Success: no issues found in 35 source files"
+      "duration_seconds": 0.372028,
+      "output_sha256": "2372b616eb3795a73583f1801e58cd0d3c29ab7ebb727787fe1daf6fa9ae95df",
+      "output_tail": "Success: no issues found in 39 source files"
     },
     {
       "name": "pytest",
@@ -54,13 +54,13 @@
         "-m",
         "pytest",
         "--cov=propertyjourney360",
-        "--cov-report=json:/var/folders/q3/8y6rkgcj0ygcmhp49xjqhpww0000gn/T/pj360-evidence-isyhqjsu/coverage.json",
+        "--cov-report=json:/var/folders/q3/8y6rkgcj0ygcmhp49xjqhpww0000gn/T/pj360-evidence-gutnuukq/coverage.json",
         "-q"
       ],
       "exit_code": 0,
-      "duration_seconds": 1.563947,
-      "output_sha256": "f760c4a48ac7b1b78296a4a594e823a059d4141fe76bc8c9f81cd21a3278c175",
-      "output_tail": "........................................................................ [ 93%]\n.....                                                                    [100%]\n=============================== warnings summary ===============================\n.venv/lib/python3.12/site-packages/fastapi/testclient.py:1\n  /Users/osmanorka/PropertyJourney-360/.venv/lib/python3.12/site-packages/fastapi/testclient.py:1: StarletteDeprecationWarning: Using `httpx` with `starlette.testclient` is deprecated; install `httpx2` instead.\n    from starlette.testclient import TestClient as TestClient  # noqa\n\n-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html\n================================ tests coverage ================================\n______________ coverage: platform darwin, python 3.12.14-final-0 _______________\n\nCoverage JSON written to file /var/folders/q3/8y6rkgcj0ygcmhp49xjqhpww0000gn/T/pj360-evidence-isyhqjsu/coverage.json\nRequired test coverage of 85.0% reached. Total coverage: 86.27%\n77 passed, 1 warning in 1.30s"
+      "duration_seconds": 5.526214,
+      "output_sha256": "df07460dcc54f720a9cf17a1012244843cba4ca0b156bbb6eb3e08700efd1be0",
+      "output_tail": "........................................................................ [ 42%]\n........................................................................ [ 85%]\n.........................                                                [100%]\n=============================== warnings summary ===============================\n.venv/lib/python3.12/site-packages/fastapi/testclient.py:1\n  /Users/osmanorka/PropertyJourney-360/.venv/lib/python3.12/site-packages/fastapi/testclient.py:1: StarletteDeprecationWarning: Using `httpx` with `starlette.testclient` is deprecated; install `httpx2` instead.\n    from starlette.testclient import TestClient as TestClient  # noqa\n\n-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html\n================================ tests coverage ================================\n______________ coverage: platform darwin, python 3.12.14-final-0 _______________\n\nCoverage JSON written to file /var/folders/q3/8y6rkgcj0ygcmhp49xjqhpww0000gn/T/pj360-evidence-gutnuukq/coverage.json\nRequired test coverage of 85.0% reached. Total coverage: 86.00%\n169 passed, 1 warning in 5.02s"
     }
   ],
   "claims": [
@@ -78,7 +78,7 @@
       "description": "Python branch coverage for the local test suite.",
       "level": "LOCALLY_VERIFIED",
       "target": 85,
-      "actual": 86.27,
+      "actual": 86.0,
       "evidence_status": "MEASURED",
       "limitation": "Coverage percentage is not a production reliability metric."
     },
@@ -93,6 +93,6 @@
     }
   ],
   "measurements": {
-    "python_branch_coverage_percent": 86.27019089574155
+    "python_branch_coverage_percent": 85.99777034559644
   }
 }

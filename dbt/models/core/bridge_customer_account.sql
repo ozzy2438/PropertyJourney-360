@@ -10,6 +10,9 @@ inner join {{ ref('dim_account') }} accounts
     on identities.source_system = accounts.source_system
     and identities.account_source_id = accounts.account_source_id
 where identities.account_source_id is not null
+  and identities.dq_status = 'VALID'
+  and membership.is_active
+  and (not membership.cluster_conflict or membership.registry_preserved)
 qualify row_number() over (
     partition by membership.customer_id, accounts.account_id
     order by identities.source_updated_at desc

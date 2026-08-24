@@ -7,25 +7,52 @@
     on_schema_change='fail'
 ) }}
 
+with base_cases as (
+    select
+        {{ stable_key(["'remediation'", 'issue_id']) }} as remediation_case_id,
+        issue_id,
+        issue_type,
+        issue_code,
+        severity,
+        source_system,
+        source_record_id,
+        detected_at as opened_at
+    from {{ ref('dq_issue') }}
+    where severity in ('HIGH', 'MEDIUM')
+),
+event_summary as (
+    select
+        remediation_case_id,
+        array_agg(
+            struct(to_status as status, actor, occurred_at)
+            order by occurred_at desc, event_id desc limit 1
+        )[offset(0)] as latest,
+        array_agg(if(to_status = 'RESOLVED', resolution_action, null) ignore nulls
+            order by occurred_at desc limit 1)[safe_offset(0)] as resolution_action,
+        array_agg(if(to_status = 'RESOLVED', actor, null) ignore nulls
+            order by occurred_at desc limit 1)[safe_offset(0)] as resolved_by,
+        array_agg(replay_id ignore nulls order by occurred_at desc limit 1)[safe_offset(0)] as replay_id,
+        max(if(to_status = 'VERIFIED', occurred_at, null)) as verified_at,
+        max(if(to_status = 'CLOSED', occurred_at, null)) as closed_at
+    from {{ source('governance_input', 'remediation_event') }}
+    group by remediation_case_id
+)
 select
-    {{ stable_key(["'remediation'", 'issue_id']) }} as remediation_case_id,
-    issue_id,
-    issue_type,
-    issue_code,
-    severity,
-    source_system,
-    source_record_id,
-    'OPEN' as status,
-    detected_at as opened_at,
-    date(detected_at, 'Australia/Melbourne') as opened_date,
-    detected_at as updated_at,
-    cast(null as string) as resolution_action,
-    cast(null as string) as resolved_by,
-    cast(null as string) as replay_id,
-    cast(null as timestamp) as verified_at,
-    cast(null as timestamp) as closed_at
-from {{ ref('dq_issue') }}
-where severity in ('HIGH', 'MEDIUM')
-{% if is_incremental() %}
-  and issue_id not in (select issue_id from {{ this }})
-{% endif %}
+    base.remediation_case_id,
+    base.issue_id,
+    base.issue_type,
+    base.issue_code,
+    base.severity,
+    base.source_system,
+    base.source_record_id,
+    coalesce(events.latest.status, 'OPEN') as status,
+    base.opened_at,
+    date(base.opened_at, 'Australia/Melbourne') as opened_date,
+    coalesce(events.latest.occurred_at, base.opened_at) as updated_at,
+    events.resolution_action,
+    events.resolved_by,
+    events.replay_id,
+    events.verified_at,
+    events.closed_at
+from base_cases base
+left join event_summary events using (remediation_case_id)

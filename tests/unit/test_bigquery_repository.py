@@ -20,13 +20,16 @@ class FakeQueryJob:
 
 
 class FakeBigQueryClient:
-    def __init__(self, responses: list[list[FakeRow]]) -> None:
+    def __init__(self, responses: list[list[FakeRow] | Exception]) -> None:
         self.responses = responses
         self.calls: list[dict[str, Any]] = []
 
     def query(self, sql: str, *, job_config: Any, location: str) -> FakeQueryJob:
         self.calls.append({"sql": sql, "job_config": job_config, "location": location})
-        return FakeQueryJob(self.responses.pop(0))
+        response = self.responses.pop(0)
+        if isinstance(response, Exception):
+            raise response
+        return FakeQueryJob(response)
 
 
 def _repository(client: FakeBigQueryClient) -> BigQueryCustomerRepository:
@@ -99,3 +102,26 @@ def test_repository_rejects_identifier_injection() -> None:
             maximum_bytes_billed=1,
             client=FakeBigQueryClient([]),
         )
+
+
+def test_readiness_probes_every_relation_used_by_api() -> None:
+    client = FakeBigQueryClient([[], [], [], [], []])
+    assert _repository(client).ready()
+
+    sql = "\n".join(call["sql"] for call in client.calls)
+    for relation in (
+        "customer_360_current",
+        "mart_personalisation_features",
+        "bridge_customer_source_identity",
+        "fact_customer_property_interaction",
+        "remediation_case",
+    ):
+        assert relation in sql
+    assert len(client.calls) == 5
+    assert all("LIMIT 0" in call["sql"] for call in client.calls)
+
+
+def test_readiness_fails_when_relation_is_not_readable() -> None:
+    client = FakeBigQueryClient([[], PermissionError("table denied")])
+    assert not _repository(client).ready()
+    assert len(client.calls) == 2

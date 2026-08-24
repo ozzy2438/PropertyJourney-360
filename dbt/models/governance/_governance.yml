@@ -7,6 +7,7 @@ models:
     columns:
       - {name: reconciliation_result_id, data_type: string, data_tests: [not_null, unique]}
       - {name: pipeline_run_id, data_type: string, data_tests: [not_null]}
+      - {name: orchestration_window_id, data_type: string}
       - {name: asset_name, data_type: string, data_tests: [not_null]}
       - {name: source_count, data_type: int64, data_tests: [not_null]}
       - {name: accepted_count, data_type: int64, data_tests: [not_null]}
@@ -43,7 +44,7 @@ models:
       - {name: issue_id, data_type: string, data_tests: [not_null, unique]}
       - {name: record_type, data_type: string, data_tests: [not_null]}
       - {name: source_system, data_type: string, data_tests: [not_null]}
-      - {name: source_record_id, data_type: string, data_tests: [not_null]}
+      - {name: source_record_id, data_type: string}
       - {name: lineage_ingestion_key, data_type: string, data_tests: [not_null]}
       - {name: issue_code, data_type: string, data_tests: [not_null]}
       - name: severity
@@ -55,7 +56,7 @@ models:
         data_type: string
         data_tests:
           - accepted_values:
-              arguments: {values: ['IDENTITY_REVIEW', 'VOLUME_ANOMALY', 'RECORD_VALIDATION']}
+              arguments: {values: ['IDENTITY_REVIEW', 'VOLUME_ANOMALY', 'DATA_INTEGRITY_COLLISION', 'RECORD_VALIDATION']}
       - {name: detected_at, data_type: timestamp, data_tests: [not_null]}
 
   - name: dq_quarantine

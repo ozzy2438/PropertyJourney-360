@@ -89,7 +89,7 @@ resource "google_cloud_run_v2_service" "api" {
         period_seconds        = 5
         failure_threshold     = 12
         http_get {
-          path = "/health"
+          path = "/ready"
           port = 8080
         }
       }
@@ -100,7 +100,7 @@ resource "google_cloud_run_v2_service" "api" {
         period_seconds        = 30
         failure_threshold     = 3
         http_get {
-          path = "/health"
+          path = "/live"
           port = 8080
         }
       }

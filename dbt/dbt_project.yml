@@ -15,10 +15,12 @@ clean-targets: ["target", "dbt_packages", "logs"]
 require-dbt-version: [">=1.10.0", "<2.0.0"]
 
 vars:
-  identity_rule_version: "v1.0.0"
-  identity_auto_match_threshold: 0.98
-  identity_review_threshold: 0.72
+  identity_rule_version: "identity-v1.1.0"
+  identity_auto_match_threshold: 0.94
+  identity_review_threshold: 0.70
+  identity_minimum_automatic_coverage: 0.70
   event_lookback_days: 3
+  anonymous_link_window_hours: 24
 
 models:
   propertyjourney_360:

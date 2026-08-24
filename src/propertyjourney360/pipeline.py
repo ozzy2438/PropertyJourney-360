@@ -7,6 +7,7 @@ from collections import defaultdict
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
 from typing import Any
+from uuid import NAMESPACE_URL, uuid5
 
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -82,9 +83,28 @@ def run_local_pipeline(
         watermark=max(record.source_updated_at for record in dataset.records).isoformat(),
     )
 
+    labels_by_key = {label.source_key: label for label in dataset.labels}
+    dispositions = {
+        source_key: _record_disposition(label.defects)
+        for source_key, label in labels_by_key.items()
+    }
+    accepted_records = tuple(
+        record for record in dataset.records if dispositions[record.source_key] == "ACCEPTED"
+    )
+    quarantined = len(dataset.records) - len(accepted_records)
+    reconciliation = reconcile(
+        run_id=run_id,
+        dataset="synthetic_identities",
+        source=len(dataset.records),
+        accepted=len(accepted_records),
+        quarantined=quarantined,
+        rejected=0,
+        explained_duplicates=0,
+    )
+
     resolver = IdentityResolver()
-    all_matches = resolver.compare_all(dataset.records)
-    cluster_resolution = resolver.resolve_clusters(dataset.records, all_matches)
+    operational_matches = resolver.compare_all(accepted_records)
+    cluster_resolution = resolver.resolve_clusters(accepted_records, operational_matches)
     held_out_records = dataset.records_for_split(DatasetSplit.HELD_OUT)
     held_out_matches = resolver.compare_all(held_out_records)
     pair_metrics = evaluate_matches(held_out_records, held_out_matches)
@@ -94,25 +114,9 @@ def run_local_pipeline(
     ).assignments
     cluster_metrics = evaluate_clusters(held_out_records, held_out_assignments)
 
-    labels_by_key = {label.source_key: label for label in dataset.labels}
-    dispositions = {
-        source_key: _record_disposition(label.defects)
-        for source_key, label in labels_by_key.items()
-    }
-    quarantined = sum(value == "QUARANTINED" for value in dispositions.values())
-    reconciliation = reconcile(
-        run_id=run_id,
-        dataset="synthetic_identities",
-        source=len(dataset.records),
-        accepted=len(dataset.records) - quarantined,
-        quarantined=quarantined,
-        rejected=0,
-        explained_duplicates=0,
-    )
-
     repository = CustomerRepository(database_path)
     records_by_customer: defaultdict[str, list[Any]] = defaultdict(list)
-    for record in dataset.records:
+    for record in accepted_records:
         customer_id = cluster_resolution.assignments[record.source_key]
         records_by_customer[customer_id].append(record)
 
@@ -122,7 +126,7 @@ def run_local_pipeline(
         MatchDecision.AUTO_MATCH: 2,
     }
     best_match_by_source: dict[str, tuple[MatchDecision, float]] = {}
-    for match in all_matches:
+    for match in operational_matches:
         for source_key in (match.left_source_key, match.right_source_key):
             previous = best_match_by_source.get(source_key)
             if previous is None or (match_rank[match.decision], match.score) > (
@@ -183,6 +187,11 @@ def run_local_pipeline(
             issue_type=issue_type,
             actor="local-dq-worker",
             note="Synthetic defect quarantined by the local contract gate.",
+            case_id=uuid5(
+                NAMESPACE_URL,
+                f"propertyjourney360:{run_id}:{record.source_key}:{issue_type}",
+            ),
+            opened_at=extracted_at,
         )
         repository.upsert_remediation(
             {
@@ -197,7 +206,7 @@ def run_local_pipeline(
         )
 
     journey_customer = min(records_by_customer)
-    processor = EventProcessor(repository, history_window=timedelta(days=30))
+    processor = EventProcessor(repository)
     base_event = extracted_at - timedelta(hours=2)
     events = (
         PropertyEvent(
@@ -253,8 +262,9 @@ def run_local_pipeline(
         customer_journey_event_count=journey_count,
         generated_at=datetime.now(UTC),
         evidence_scope=(
-            "Deterministic local synthetic execution only; "
-            "not Salesforce, BigQuery or GCP evidence."
+            "Deterministic local synthetic execution only; held-out matcher metrics cover the "
+            "full synthetic evaluation split while operational curation excludes quarantined "
+            "records; not Salesforce, BigQuery or GCP evidence."
         ),
     )
     output_root.mkdir(parents=True, exist_ok=True)

@@ -58,6 +58,10 @@ locals {
       account_id   = "${local.prefix}-github-tf"
       display_name = "GitHub owner-gated Terraform deployment"
     }
+    github_image_builder = {
+      account_id   = "${local.prefix}-github-image"
+      display_name = "GitHub owner-gated immutable image publisher"
+    }
   }
 
   project_roles_by_service = {
@@ -98,6 +102,7 @@ locals {
       "roles/serviceusage.serviceUsageAdmin",
       "roles/storage.admin",
     ])
+    github_image_builder = toset([])
   }
 
   project_role_bindings = merge([

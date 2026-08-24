@@ -1,19 +1,20 @@
 # Data model
 
-## Common raw envelope
+## Common RAW metadata
 
-Every operational record is wrapped before raw load:
+Every explicit RAW table has a versioned typed schema. The ingestion adapter adds these common
+columns before landing and load:
 
 | Field | Meaning |
 |---|---|
-| `schema_version` | Version of the source contract/parser |
-| `source_system`, `entity_type` | Provenance and source object |
-| `source_record_id` | Original, never discarded |
-| `source_updated_at` | Source business/system change time |
-| `extracted_at`, `ingested_at` | Pipeline event times |
-| `run_id`, `object_uri`, `payload_sha256` | Audit and replay identity |
-| `operation` | `UPSERT` or `DELETE`/tombstone |
-| `payload` | Original source representation |
+| `_schema_version` | Version of the source contract/parser |
+| `_window_id` | Frozen Airflow window shared across extract/load/dbt/reconciliation |
+| `_source_run_id` | Original window or explicit replay identity |
+| `_ingested_at` | Pipeline ingestion timestamp and partition column |
+
+Original source IDs and source update times remain typed asset columns. Object URI, extracted time,
+record count and payload SHA-256 live in the create-only landing manifest rather than being copied
+onto every row.
 
 `RecordDisposition` assigns each input exactly one of `ACCEPTED`, `QUARANTINED`, `REJECTED` or
 `DUPLICATE`, with a machine-readable reason and record hash.
@@ -22,7 +23,7 @@ Every operational record is wrapped before raw load:
 
 | Layer | Models | Grain / intent |
 |---|---|---|
-| RAW | Salesforce account/contact/case, legacy customer, support, consent, events, property, market, ABS, RBA, manifests | Append-only source versions |
+| RAW | Salesforce account/contact/case, legacy customer, support, consent, events, property, market, ABS, RBA | Append-only source versions; manifests remain operator evidence |
 | STAGING | Source-specific `stg_*` models | Typed, renamed, conservatively normalised source records |
 | INTERMEDIATE | identity candidates/features/decisions, event links | Explainable pipeline working sets |
 | CORE | `dim_customer`, history, account, property, bridges, interaction/support/consent facts | Trusted dimensional product |
@@ -35,12 +36,16 @@ registry/event-history extensions are not represented as existing warehouse tabl
 
 ## Customer keys and history
 
-- `customer_id` is a stable key derived from the connected source-identity component, never directly
-  from email, phone, name or address values.
+- `customer_id` is initially derived from the connected source-identity component, then persisted in
+  the incremental identity registry; it is never directly derived from email, phone, name or address.
+- Invalidated identities remain inactive in the registry for ID continuity but are excluded from
+  curated dimensions/bridges. If previously co-clustered identities later split into conflicting
+  verified emails, every affected mapping remains visible in the registry under its issued ID while
+  the whole conflicting customer is held out of trusted dimensions/bridges.
 - `bridge_customer_source_identity` maps each original source key to a canonical customer with rule
   version, decision and effective history.
-- Cluster merges retain a survivor and redirects; cluster splits are remediation events, not silent
-  rewrites.
+- A component containing conflicting verified emails or multiple previously issued customer IDs is
+  excluded from the trusted bridge and routed to remediation rather than silently merged.
 - `dim_customer` contains current state. `dim_customer_history` is SCD Type 2 with non-overlapping
   effective intervals and exactly one current row per customer.
 - Consent is a fact/history stream, never overwritten by a convenient “current” flag alone.
@@ -54,9 +59,10 @@ registry/event-history extensions are not represented as existing warehouse tabl
 | Consent/support facts | effective/created date | customer | Lifecycle and customer queries |
 | Small dimensions | none by default | only if measured useful | Avoid tiny partition overhead |
 
-Incremental MERGE statements constrain both source and target to affected partitions. Late arrivals
-are selected by ingestion time and rewrite/merge only affected business-date partitions. API query
-adapters use parameters and a maximum-bytes-billed cap.
+Incremental inputs are constrained to the frozen run window, while business-key MERGE operations
+remain target-table scans unless BigQuery execution evidence justifies adding safe target partition
+predicates. Late arrivals are selected by ingestion time; API query adapters use parameters and a
+maximum-bytes-billed cap.
 
 ## Personalisation features
 

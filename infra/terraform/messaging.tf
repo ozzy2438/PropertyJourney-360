@@ -86,6 +86,13 @@ resource "google_pubsub_topic_iam_member" "dead_letter_service_agent" {
   member  = "serviceAccount:service-${data.google_project.current.number}@gcp-sa-pubsub.iam.gserviceaccount.com"
 }
 
+resource "google_pubsub_topic_iam_member" "dead_letter_event_consumer" {
+  project = var.project_id
+  topic   = google_pubsub_topic.dead_letter.name
+  role    = "roles/pubsub.publisher"
+  member  = "serviceAccount:${google_service_account.workload["event_consumer"].email}"
+}
+
 resource "google_pubsub_subscription_iam_member" "forwarding_service_agent" {
   project      = var.project_id
   subscription = google_pubsub_subscription.events.name

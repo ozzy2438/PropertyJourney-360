@@ -43,10 +43,25 @@ def test_health_and_customer_contract(tmp_path: Path) -> None:
         repository=_repo(tmp_path),
     )
     with TestClient(app) as client:
+        assert client.get("/live").status_code == 200
+        assert client.get("/ready").status_code == 200
         assert client.get("/health").json()["readiness"] == "ok"
         response = client.get("/customers/customer-1")
     assert response.status_code == 200
     assert response.json()["preferred_suburbs"] == ["Melbourne", "Carlton"]
+
+
+def test_readiness_returns_503_when_repository_dependency_is_unavailable(tmp_path: Path) -> None:
+    repository = _repo(tmp_path)
+    repository.ready = lambda: False  # type: ignore[method-assign]
+    app = create_app(
+        settings=Settings(environment=Environment.TEST, database_path=tmp_path / "api.db"),
+        repository=repository,
+    )
+    with TestClient(app) as client:
+        assert client.get("/live").status_code == 200
+        assert client.get("/ready").status_code == 503
+        assert client.get("/health").status_code == 503
 
 
 def test_identity_sources_are_masked(tmp_path: Path) -> None:

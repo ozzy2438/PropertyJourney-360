@@ -2,81 +2,92 @@ version: 2
 
 models:
   - name: stg_salesforce_accounts
-    description: Latest Salesforce Account record with ABN and Victorian address normalisation.
-    data_tests:
-      - unique:
-          arguments: {column_name: account_source_id}
+    description: Window-preserving Salesforce Account staging with ABN and address normalisation.
     columns:
-      - name: ingestion_key
-        data_tests: [not_null, unique]
+      - {name: ingestion_key, data_tests: [not_null]}
       - name: dq_status
         data_tests:
           - accepted_values:
-              arguments: {values: ['VALID', 'INVALID_KEY', 'INVALID_POSTCODE']}
+              arguments: {values: ['VALID', 'INVALID_KEY', 'CONFLICTING_DUPLICATE', 'INVALID_POSTCODE']}
+
   - name: stg_salesforce_contacts
-    description: Latest synthetic Salesforce Contact per immutable source identifier.
+    description: Window-preserving synthetic Salesforce Contact staging.
     columns: &identity_columns
-      - name: ingestion_key
-        data_tests: [not_null, unique]
-      - name: source_record_id
-        data_tests: [not_null, unique]
+      - {name: ingestion_key, data_tests: [not_null]}
       - name: dq_status
         data_tests:
           - accepted_values:
-              arguments: {values: ['VALID', 'INVALID_KEY', 'INVALID_EMAIL', 'INVALID_PHONE', 'INVALID_POSTCODE', 'MISSING_IDENTITY']}
+              arguments: {values: ['VALID', 'INVALID_KEY', 'CONFLICTING_DUPLICATE', 'INVALID_EMAIL', 'INVALID_PHONE', 'INVALID_POSTCODE', 'MISSING_IDENTITY']}
+
   - name: stg_legacy_customers
-    description: Latest legacy CRM record; malformed contact points remain observable through dq_status.
+    description: Window-preserving legacy CRM records; malformed contact points remain quarantinable.
     columns: *identity_columns
+
   - name: stg_support_customers
-    description: Latest synthetic support-customer identity projected from support cases.
+    description: Latest-per-window synthetic support identity projected from support cases.
     columns: *identity_columns
+
   - name: stg_salesforce_cases
-    columns:
-      - name: case_source_id
-        data_tests: [not_null, unique]
+    columns: &case_columns
+      - {name: ingestion_key, data_tests: [not_null]}
       - name: dq_status
         data_tests:
           - accepted_values:
-              arguments: {values: ['VALID', 'INVALID_KEY', 'INVALID_TIMESTAMP', 'ORPHAN_SUBJECT']}
+              arguments: {values: ['VALID', 'INVALID_KEY', 'CONFLICTING_DUPLICATE', 'INVALID_TIMESTAMP', 'ORPHAN_SUBJECT']}
+
   - name: stg_support_cases
-    columns:
-      - name: case_source_id
-        data_tests: [not_null, unique]
-      - name: dq_status
-        data_tests:
-          - accepted_values:
-              arguments: {values: ['VALID', 'INVALID_KEY', 'INVALID_TIMESTAMP', 'ORPHAN_SUBJECT']}
+    columns: *case_columns
+
   - name: stg_marketing_consents
     columns:
-      - name: consent_event_id
-        data_tests: [not_null, unique]
+      - {name: ingestion_key, data_tests: [not_null]}
       - name: dq_status
         data_tests:
           - accepted_values:
-              arguments: {values: ['VALID', 'INVALID_KEY', 'ORPHAN_SUBJECT', 'INVALID_CHANNEL', 'INVALID_STATUS']}
+              arguments: {values: ['VALID', 'EXACT_DUPLICATE', 'INVALID_KEY', 'CONFLICTING_DUPLICATE', 'EVENT_ID_COLLISION', 'ORPHAN_SUBJECT', 'INVALID_CHANNEL', 'INVALID_STATUS']}
+
   - name: stg_property_events
-    description: Idempotent event staging with a three-day late-arrival lookback and explicit schema-version gate.
+    description: Window-preserving event staging with late-arrival and explicit schema-version gates.
     columns:
-      - name: event_id
-        data_tests: [not_null, unique]
+      - {name: ingestion_key, data_tests: [not_null]}
+      - name: dq_status
+        data_tests:
+          - accepted_values:
+              arguments: {values: ['VALID', 'EXACT_DUPLICATE', 'INVALID_KEY', 'CONFLICTING_DUPLICATE', 'EVENT_ID_COLLISION', 'INVALID_TIMESTAMP', 'INVALID_EVENT_TYPE', 'UNSUPPORTED_SCHEMA', 'V1_DEVICE_TYPE_NOT_ALLOWED', 'MISSING_EVENT_IDENTITY', 'MISSING_IDENTIFY_SUBJECT', 'ORPHAN_SUBJECT', 'CONFLICTING_SUBJECT', 'ORPHAN_PROPERTY']}
       - name: event_type
         data_tests:
           - accepted_values:
               config: {where: "dq_status = 'VALID'"}
               arguments: {values: ['VIEW', 'SAVE', 'ENQUIRY', 'SEARCH', 'IDENTIFY']}
+
   - name: stg_property_master
     columns:
-      - name: property_source_id
-        data_tests: [not_null, unique]
+      - {name: ingestion_key, data_tests: [not_null]}
+      - name: dq_status
+        data_tests:
+          - accepted_values:
+              arguments: {values: ['VALID', 'INVALID_KEY', 'CONFLICTING_DUPLICATE', 'INVALID_PROVENANCE', 'OUT_OF_SCOPE_STATE', 'INVALID_POSTCODE', 'INVALID_COORDINATES']}
+
   - name: stg_market_data
     columns:
-      - name: market_record_id
-        data_tests: [not_null, unique]
+      - {name: market_record_id, data_tests: [not_null]}
+      - name: dq_status
+        data_tests:
+          - accepted_values:
+              arguments: {values: ['VALID', 'INVALID_KEY', 'CONFLICTING_DUPLICATE', 'INVALID_PROVENANCE', 'INVALID_MEASURE']}
+
   - name: stg_abs_demographics
     columns:
-      - name: demographic_record_id
-        data_tests: [not_null, unique]
+      - {name: demographic_record_id, data_tests: [not_null]}
+      - name: dq_status
+        data_tests:
+          - accepted_values:
+              arguments: {values: ['VALID', 'INVALID_KEY', 'CONFLICTING_DUPLICATE', 'INVALID_PROVENANCE', 'INVALID_MEASURE']}
+
   - name: stg_rba_indicators
     columns:
-      - name: indicator_record_id
-        data_tests: [not_null, unique]
+      - {name: indicator_record_id, data_tests: [not_null]}
+      - name: dq_status
+        data_tests:
+          - accepted_values:
+              arguments: {values: ['VALID', 'INVALID_KEY', 'CONFLICTING_DUPLICATE', 'INVALID_PROVENANCE']}

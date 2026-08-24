@@ -1,3 +1,0 @@
-# Keep the transformation CLI available to Airflow Bash tasks without installing at startup.
-dbt-core==1.12.3
-dbt-bigquery==1.12.0

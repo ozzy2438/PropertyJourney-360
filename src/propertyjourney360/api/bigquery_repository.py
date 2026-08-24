@@ -77,7 +77,16 @@ class BigQueryCustomerRepository:
 
     def ready(self) -> bool:
         try:
-            return bool(self._query("SELECT 1 AS ready")[0]["ready"] == 1)
+            required_relations = (
+                self._table(self.marts_dataset, "customer_360_current"),
+                self._table(self.marts_dataset, "mart_personalisation_features"),
+                self._table(self.core_dataset, "bridge_customer_source_identity"),
+                self._table(self.core_dataset, "fact_customer_property_interaction"),
+                self._table(self.governance_dataset, "remediation_case"),
+            )
+            for relation in required_relations:
+                self._query(f"SELECT 1 AS readable FROM {relation} LIMIT 0")
+            return True
         except Exception:  # Readiness must degrade on any client/query failure.
             return False
 

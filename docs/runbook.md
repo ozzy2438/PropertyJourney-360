@@ -28,6 +28,32 @@
 - Do not label `dbt parse` as a successful warehouse build.
 - Fix forward, rerun only affected models/partitions, then run downstream tests and reconciliation.
 
+## Batch extraction or RAW load failure
+
+- Preserve the frozen `window_id`, source, operator report and landing manifest; do not create an
+  ad-hoc replacement window to hide a partial run.
+- Re-run the same `pj360 ingest-batch extract` or `load-raw` command. Immutable reports and
+  content-derived BigQuery job IDs make a byte-identical retry safe.
+- For an incremental run, the operator resolves each source's effective low bound from its
+  committed per-asset watermark. Partial or divergent multi-asset watermark state fails closed;
+  explicit backfill/replay windows never read or advance the live watermark.
+- Never invoke `commit-watermarks` until every selected source has complete load evidence and the
+  same-window dbt reconciliation gate passed.
+- Backfill/replay runs do not advance the live incremental watermark.
+
+## GCP impersonation or ADC failure
+
+- Confirm the cloud run intentionally includes both `compose.yaml` and `compose.gcp.yaml`; default
+  local Compose has no GCP credential mount and no service-account target.
+- Confirm the ADC broker path exists on the host, is mounted read-only, and is a user or
+  workload-federated ADC credential rather than a downloaded service-account key.
+- Confirm all three target emails match current Terraform outputs. Batch must target `ingest`, event
+  handling must target `event_consumer`, and dbt must target `transform`; do not reuse one account.
+- An owner grants the broker principal `roles/iam.serviceAccountTokenCreator` on each target service
+  account, not at project scope. Preserve the IAM denial and principal/target names without logging
+  tokens or credential content.
+- Do not fall back to embedding JSON keys, broadening target IAM, or mounting a writable credential.
+
 ## Schema change
 
 - Freeze the affected source watermark and preserve the first incompatible raw payload.
@@ -38,7 +64,8 @@
 ## Reconciliation mismatch
 
 - Publication and watermark advancement remain blocked.
-- Drill from aggregate counts to the disposition table and record hashes.
+- Drill from aggregate counts to disposition rows and lineage ingestion keys; correlate the raw
+  manifest URI/SHA from operator evidence until the warehouse manifest join is implemented.
 - Check duplicate classification, late rows, partial object load and cross-run overlap.
 - Correct the pipeline, rerun the exact window and require a new `PASSED` result. Never change source
   counts to force equality.

@@ -7,18 +7,35 @@
     on_schema_change='fail'
 ) }}
 
-with cases as (
+{% set run_window_id = var('orchestration_window_id', '') %}
+
+with all_cases as (
     select
         ingestion_key, source_system, customer_source_system, case_source_id,
         customer_source_id, account_source_id, case_status, priority, subject,
-        opened_at, closed_at, source_updated_at, ingested_at, dq_status
+        opened_at, closed_at, source_updated_at, ingested_at, orchestration_window_id
     from {{ ref('stg_salesforce_cases') }} where dq_status = 'VALID'
     union all
     select
         ingestion_key, source_system, customer_source_system, case_source_id,
         customer_source_id, account_source_id, case_status, priority, subject,
-        opened_at, closed_at, source_updated_at, ingested_at, dq_status
+        opened_at, closed_at, source_updated_at, ingested_at, orchestration_window_id
     from {{ ref('stg_support_cases') }} where dq_status = 'VALID'
+),
+cases as (
+    select * from all_cases
+    {% if is_incremental() and run_window_id %}
+    where orchestration_window_id = '{{ run_window_id }}'
+    {% elif is_incremental() %}
+    where source_updated_at >= timestamp_sub(
+        (select coalesce(max(source_updated_at), timestamp('1970-01-01')) from {{ this }}),
+        interval 3 day
+    )
+    {% endif %}
+    qualify row_number() over (
+        partition by source_system, case_source_id
+        order by source_updated_at desc, ingested_at desc, ingestion_key desc
+    ) = 1
 ),
 identity_map as (
     select source_system, source_record_id, customer_id
@@ -49,9 +66,3 @@ left join identity_map
 left join account_map
     on cases.source_system = account_map.source_system
     and cases.account_source_id = account_map.account_source_id
-{% if is_incremental() %}
-where cases.source_updated_at >= timestamp_sub(
-    (select coalesce(max(source_updated_at), timestamp('1970-01-01')) from {{ this }}),
-    interval 3 day
-)
-{% endif %}

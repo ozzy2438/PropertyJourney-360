@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import sqlite3
+from collections.abc import Sequence
 from contextlib import closing
 from datetime import UTC, datetime
 from pathlib import Path
@@ -58,23 +59,39 @@ class WatermarkStore:
     def advance(self, *, source: str, stream: str, value: str, run_id: str) -> Watermark:
         """Advance lexicographically sortable watermarks; reject regressions."""
 
+        return self.advance_many(((source, stream, value, run_id),))[0]
+
+    def advance_many(self, updates: Sequence[tuple[str, str, str, str]]) -> tuple[Watermark, ...]:
+        """Atomically advance a complete source/asset set or leave every row unchanged."""
+
         now = datetime.now(UTC)
         with closing(self._connect()) as connection, connection:
-            row = connection.execute(
-                "SELECT value FROM ingestion_watermark WHERE source = ? AND stream = ?",
-                (source, stream),
-            ).fetchone()
-            if row and value < row["value"]:
-                raise ValueError(f"watermark regression for {source}.{stream}")
-            connection.execute(
-                """
-                INSERT INTO ingestion_watermark (source, stream, value, updated_at, run_id)
-                VALUES (?, ?, ?, ?, ?)
-                ON CONFLICT(source, stream) DO UPDATE SET
-                    value = excluded.value,
-                    updated_at = excluded.updated_at,
-                    run_id = excluded.run_id
-                """,
-                (source, stream, value, now.isoformat(), run_id),
+            for source, stream, value, _run_id in updates:
+                row = connection.execute(
+                    "SELECT value FROM ingestion_watermark WHERE source = ? AND stream = ?",
+                    (source, stream),
+                ).fetchone()
+                if row and value < row["value"]:
+                    raise ValueError(f"watermark regression for {source}.{stream}")
+            for source, stream, value, run_id in updates:
+                connection.execute(
+                    """
+                    INSERT INTO ingestion_watermark (source, stream, value, updated_at, run_id)
+                    VALUES (?, ?, ?, ?, ?)
+                    ON CONFLICT(source, stream) DO UPDATE SET
+                        value = excluded.value,
+                        updated_at = excluded.updated_at,
+                        run_id = excluded.run_id
+                    """,
+                    (source, stream, value, now.isoformat(), run_id),
+                )
+        return tuple(
+            Watermark(
+                source=source,
+                stream=stream,
+                value=value,
+                updated_at=now,
+                run_id=run_id,
             )
-        return Watermark(source=source, stream=stream, value=value, updated_at=now, run_id=run_id)
+            for source, stream, value, run_id in updates
+        )

@@ -98,6 +98,67 @@ def test_duplicate_delivery_is_acknowledged_idempotently(tmp_path: Path) -> None
     assert duplicate.acked
 
 
+def test_divergent_event_id_is_dead_lettered_without_overwrite(tmp_path: Path) -> None:
+    publisher = FakePublisher()
+    handler = PubSubEventHandler(
+        processor=EventProcessor(CustomerRepository(tmp_path / "events.db")),
+        dead_letter_topic="projects/test/topics/dlq",
+        publisher=publisher,
+    )
+    assert handler.handle(FakeMessage(_event().model_dump_json().encode())).disposition is (
+        MessageDisposition.ACCEPTED
+    )
+    divergent = _event().model_copy(update={"price_observed": 123_000})
+    message = FakeMessage(divergent.model_dump_json().encode(), "message-collision")
+
+    result = handler.handle(message)
+
+    assert result.disposition is MessageDisposition.DEAD_LETTERED
+    assert message.acked
+    assert publisher.calls[-1]["attributes"]["failure_reason"] == "EVENT_ID_COLLISION"
+
+
+def test_identity_review_is_dead_lettered_then_can_be_reprocessed(tmp_path: Path) -> None:
+    repository = CustomerRepository(tmp_path / "events.db")
+    publisher = FakePublisher()
+    handler = PubSubEventHandler(
+        processor=EventProcessor(repository),
+        dead_letter_topic="projects/test/topics/dlq",
+        publisher=publisher,
+    )
+    unresolved = _event("review-event").model_copy(
+        update={"anonymous_id": None, "customer_id": "customer-later"}
+    )
+    first = FakeMessage(unresolved.model_dump_json().encode(), "message-review")
+
+    result = handler.handle(first)
+
+    assert result.disposition is MessageDisposition.REVIEW_REQUIRED
+    assert first.acked
+    assert publisher.calls[-1]["attributes"]["failure_reason"] == ("EVENT_IDENTITY_REVIEW_REQUIRED")
+    with repository.connect() as connection:
+        assert (
+            connection.execute(
+                "SELECT 1 FROM property_event WHERE event_id = ?", (unresolved.event_id,)
+            ).fetchone()
+            is None
+        )
+
+    repository.upsert_customer(
+        {
+            "customer_id": "customer-later",
+            "display_name": "Synthetic Later",
+            "preferred_suburbs": "[]",
+            "observed_price_band": None,
+            "identity_rule_version": "identity-v1.1.0",
+            "as_of": "2026-08-24T00:00:00+00:00",
+        }
+    )
+    second = FakeMessage(unresolved.model_dump_json().encode(), "message-replay")
+    assert handler.handle(second).disposition is MessageDisposition.ACCEPTED
+    assert second.acked
+
+
 def test_invalid_event_is_dead_lettered_before_ack(tmp_path: Path) -> None:
     publisher = FakePublisher()
     handler = PubSubEventHandler(

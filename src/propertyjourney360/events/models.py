@@ -8,6 +8,72 @@ from typing import Any, Literal
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
+_EVENT_SCHEMA_INVARIANTS: dict[str, Any] = {
+    "allOf": [
+        {
+            "anyOf": [
+                {
+                    "required": ["anonymous_id"],
+                    "properties": {"anonymous_id": {"type": "string", "minLength": 1}},
+                },
+                {
+                    "required": ["customer_id"],
+                    "properties": {"customer_id": {"type": "string", "minLength": 1}},
+                },
+                {
+                    "required": ["customer_source_system", "customer_source_id"],
+                    "properties": {
+                        "customer_source_system": {"type": "string", "minLength": 1},
+                        "customer_source_id": {"type": "string", "minLength": 1},
+                    },
+                },
+            ]
+        },
+        {
+            "if": {
+                "required": ["customer_source_system"],
+                "properties": {"customer_source_system": {"type": "string"}},
+            },
+            "then": {
+                "required": ["customer_source_id"],
+                "properties": {"customer_source_id": {"type": "string", "minLength": 1}},
+            },
+        },
+        {
+            "if": {
+                "required": ["customer_source_id"],
+                "properties": {"customer_source_id": {"type": "string"}},
+            },
+            "then": {
+                "required": ["customer_source_system"],
+                "properties": {"customer_source_system": {"type": "string", "minLength": 1}},
+            },
+        },
+        {
+            "if": {"properties": {"event_type": {"const": "IDENTIFY"}}},
+            "then": {
+                "anyOf": [
+                    {
+                        "required": ["customer_id"],
+                        "properties": {"customer_id": {"type": "string", "minLength": 1}},
+                    },
+                    {
+                        "required": ["customer_source_system", "customer_source_id"],
+                        "properties": {
+                            "customer_source_system": {"type": "string", "minLength": 1},
+                            "customer_source_id": {"type": "string", "minLength": 1},
+                        },
+                    },
+                ]
+            },
+        },
+        {
+            "if": {"properties": {"schema_version": {"const": 1}}},
+            "then": {"properties": {"device_type": {"type": "null"}}},
+        },
+    ]
+}
+
 
 class EventType(StrEnum):
     SEARCH = "SEARCH"
@@ -18,7 +84,11 @@ class EventType(StrEnum):
 
 
 class PropertyEvent(BaseModel):
-    model_config = ConfigDict(frozen=True, extra="forbid")
+    model_config = ConfigDict(
+        frozen=True,
+        extra="forbid",
+        json_schema_extra=_EVENT_SCHEMA_INVARIANTS,
+    )
 
     schema_version: Literal[1, 2]
     event_id: str = Field(min_length=1, max_length=128)
@@ -31,11 +101,17 @@ class PropertyEvent(BaseModel):
     customer_source_system: str | None = None
     customer_source_id: str | None = None
     property_id: str | None = None
+    price_observed: float | None = Field(default=None, ge=0)
     device_type: str | None = None
     attributes: dict[str, Any] = Field(default_factory=dict)
 
     @model_validator(mode="after")
     def validate_version_and_identity(self) -> PropertyEvent:
+        if any(
+            value.tzinfo is None or value.utcoffset() is None
+            for value in (self.occurred_at, self.received_at)
+        ):
+            raise ValueError("event timestamps must include a timezone")
         has_source_identity = bool(self.customer_source_system and self.customer_source_id)
         has_partial_source_identity = bool(self.customer_source_system) != bool(
             self.customer_source_id

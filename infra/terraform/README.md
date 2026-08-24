@@ -21,6 +21,11 @@ create or download a service-account JSON key.
 5. Put the provider and deployment-service-account outputs into the protected GitHub `production`
 Environment. Configure required reviewers before enabling authenticated workflows.
 
+Also set `GCP_IMAGE_BUILDER_SERVICE_ACCOUNT` from the
+`github_image_builder_service_account` output. The image workflow uses this dedicated
+repository-level Artifact Registry writer; `GCP_TERRAFORM_SERVICE_ACCOUNT` remains exclusive to
+the saved-plan Terraform workflow.
+
 The Terraform workflow never recreates a plan during an apply. An apply requires `APPLY` plus the
 successful plan workflow run ID, verifies that run came from this workflow on `main`, checks out its
 exact head SHA, downloads its retained plan artifact and applies that file. A stale remote-state
@@ -28,7 +33,21 @@ serial causes Terraform to reject the saved plan.
 
 The OIDC provider accepts only the immutable repository ID `1344424735`, immutable owner ID
 `165224451`, `refs/heads/main`, and the `production` GitHub Environment. GitHub workflows also
-require the initiating actor to be the repository owner for apply/deploy.
+require the initiating actor to be the repository owner for apply/deploy. Service-account
+impersonation is additionally split by the mapped immutable `workflow_ref`: only
+`.github/workflows/terraform.yml@refs/heads/main` can use the Terraform account, and only
+`.github/workflows/deploy-api.yml@refs/heads/main` can use the image-builder account. A token from
+one workflow cannot select the other account.
+
+## Airflow runtime impersonation bootstrap
+
+Terraform creates and outputs separate `ingest`, `event_consumer` and `transform` service-account
+emails, but it cannot infer the human or workload identity that an owner will use as the Airflow ADC
+broker. Before an approved GCP validation, grant that broker principal
+`roles/iam.serviceAccountTokenCreator` separately on those three target service accounts. Do not
+grant token creation project-wide and do not create service-account JSON keys. Configure the three
+email outputs and a read-only user/workload-federated ADC path through `compose.gcp.yaml`; the base
+Compose stack remains credential-free.
 
 ## Two-stage API deployment
 

@@ -79,14 +79,23 @@ def create_app(
                 headers={"WWW-Authenticate": "Bearer"},
             )
 
-    @app.get("/health", tags=["operations"])
-    def health(repository: Annotated[CustomerReadRepository, Depends(repo)]) -> dict[str, Any]:
-        ready = repository.ready()
-        return {
-            "status": "ok" if ready else "degraded",
-            "liveness": "ok",
-            "readiness": "ok" if ready else "failed",
-        }
+    @app.get("/live", tags=["operations"])
+    def live() -> dict[str, str]:
+        """Process liveness must not depend on an external data service."""
+        return {"status": "ok"}
+
+    def readiness_payload(
+        repository: Annotated[CustomerReadRepository, Depends(repo)],
+    ) -> dict[str, str]:
+        if not repository.ready():
+            raise HTTPException(
+                status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+                detail="data dependency is unavailable",
+            )
+        return {"status": "ok", "liveness": "ok", "readiness": "ok"}
+
+    app.get("/ready", tags=["operations"])(readiness_payload)
+    app.get("/health", tags=["operations"])(readiness_payload)
 
     @app.get("/customers/{customer_id}", dependencies=[Depends(authorize)], tags=["customers"])
     def customer(

@@ -73,3 +73,7 @@ select
     {{ stable_key(['source_system', 'source_record_id']) }} as source_identity_key,
     *
 from identities
+qualify row_number() over (
+    partition by source_system, source_record_id
+    order by source_updated_at desc, ingested_at desc, ingestion_key desc
+) = 1

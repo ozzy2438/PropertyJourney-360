@@ -9,8 +9,8 @@ ArcGIS); parser/schema hashes and object URI are added by the subsequent landing
 |---|---|---|---|
 | [Vicmap Address](https://www.land.vic.gov.au/maps-and-spatial/spatial-data/vicmap-catalogue/vicmap-address) | Victorian Government; weekly ArcGIS REST/FeatureServer | CC BY 4.0; attribution and change notice required | Selected LGA/postcodes; raw data stays out of Git |
 | [Vicmap Property](https://www.land.vic.gov.au/maps-and-spatial/spatial-data/vicmap-catalogue/vicmap-property) | Victorian Government; weekly ArcGIS REST/FeatureServer | CC BY 4.0 | Selected geography; simplified analytic geometry |
-| [Victorian Property Sales Report](https://discover.data.vic.gov.au/dataset/victorian-property-sales-report-time-series) | Valuer-General Victoria aggregate XLS/XLSX reports | CC BY 4.0 | Suburb/property-type medians and volumes only |
-| [ABS Data API](https://www.abs.gov.au/statistics/application-programming-interfaces-apis/data-api-user-guide) | ABS SDMX REST; keyless beta API with response limits | Generally CC BY 4.0, but selected product metadata is rechecked | Version-pinned, bounded dataflows and official geography |
+| [Victorian Property Sales Report](https://discover.data.vic.gov.au/dataset/victorian-property-sales-report-median-house-by-suburb-time-series) | Valuer-General Victoria aggregate XLS/XLSX reports | CC BY 4.0 | Suburb/property-type medians and volumes only; automated workbook download currently blocked by HTTP 403 |
+| [ABS Data API](https://www.abs.gov.au/statistics/application-programming-interfaces-apis/data-api-user-guide) | ABS SDMX REST; keyless beta API with response limits | CC BY 4.0 for the selected Census products | Pinned C21 G01/G02/G37 v1.0.0 queries for Victorian SA2 only |
 | [RBA statistical tables](https://www.rba.gov.au/statistics/tables/) | Official CSV/XLSX tables; no general supported public REST API assumed | RBA notice has series-specific conditions | RBA-authored F1 series only; preserve vintage |
 | [ABN Lookup public bulk extract](https://abr.business.gov.au/Tools/BulkExtract) | Weekly ZIP/XML public subset | CC BY 3.0 Australia | Active non-individual entities; minimise fields |
 | [City of Melbourne CLUE](https://www.melbourne.vic.gov.au/census-land-use-and-employment-clue) | Annual confidentialised aggregate CSV export | CC BY 4.0 | Regional context; suppressed cells remain suppressed |
@@ -27,10 +27,13 @@ ArcGIS); parser/schema hashes and object URI are added by the subsequent landing
 
 ## Acquired validation slice
 
-On 2026-08-24 the local fetcher acquired and hashed the RBA F1 workbook, a City of Melbourne CLUE
-CSV and one explicitly filtered 25-record Vicmap Address ArcGIS page for postcode 3000. The raw
-responses are ignored by Git. This proves bounded HTTP acquisition and contract capture only, not
-full source coverage, GCS landing or BigQuery loading. Exact hashes are in
+On 2026-08-24 the local fetcher acquired and hashed the RBA F1 CSV, a City of Melbourne CLUE CSV,
+one explicitly filtered 25-record Vicmap Address ArcGIS page for postcode 3000 and three ABS Census
+2021 SDMX slices (G01 population, G02 median household income and G37 tenure) for Victorian SA2.
+The ABS adapter joined 524 geographies; 523 are complete and one special-area row retains missing
+household measures for quarantine rather than invention. Raw responses are ignored by Git. This
+proves bounded HTTP acquisition and contract capture only, not GCS landing or BigQuery loading.
+Exact hashes are in
 [`evidence/public_source_validation.json`](../evidence/public_source_validation.json).
 
 ## Geography and revision controls

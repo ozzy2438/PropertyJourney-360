@@ -34,6 +34,8 @@ jobs:
           cache-dependency-path: |
             pyproject.toml
             uv.lock
+            docker/airflow/dbt/pyproject.toml
+            docker/airflow/dbt/uv.lock
 
       - name: Install locked environment
         run: |
@@ -94,15 +96,26 @@ jobs:
       - name: Install uv
         run: python -m pip install --disable-pip-version-check --no-deps "uv==${UV_VERSION}"
 
+      - name: Install locked dbt runtime
+        run: uv sync --project docker/airflow/dbt --locked --no-install-project
+
+      - name: Audit locked dbt dependencies
+        run: |
+          uv export --project docker/airflow/dbt --quiet --locked --no-emit-project \
+            --format requirements.txt \
+            --output-file /tmp/propertyjourney360-dbt-requirements.txt
+          uv run --project docker/airflow/dbt --with pip-audit==2.10.0 \
+            pip-audit --strict --require-hashes \
+            --requirement /tmp/propertyjourney360-dbt-requirements.txt
+
       - name: Resolve declared dbt packages
         run: >-
-          uvx --from dbt-core==1.12.3 --with dbt-bigquery==1.12.0 dbt deps
-          --project-dir dbt
-          --profiles-dir .github/dbt
+          uv run --project docker/airflow/dbt dbt deps
+          --project-dir dbt --profiles-dir .github/dbt
 
       - name: Parse every dbt node without cloud credentials
         run: >-
-          uvx --from dbt-core==1.12.3 --with dbt-bigquery==1.12.0 dbt parse
+          uv run --project docker/airflow/dbt dbt parse
           --project-dir dbt
           --profiles-dir .github/dbt
           --target ci
@@ -154,9 +167,27 @@ jobs:
           context: .
           file: Dockerfile
           push: false
+          load: true
           tags: propertyjourney360-api:ci
           cache-from: type=gha
           cache-to: type=gha,mode=max
+
+      - name: Build the Airflow and dbt operator image
+        uses: docker/build-push-action@53b7df96c91f9c12dcc8a07bcb9ccacbed38856a
+        with:
+          context: .
+          file: docker/airflow/Dockerfile
+          push: false
+          load: true
+          tags: propertyjourney360-airflow:ci
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Smoke-test packaged operator and dbt CLIs
+        run: |
+          docker run --rm --entrypoint pj360 propertyjourney360-airflow:ci --help
+          docker run --rm --entrypoint /opt/dbt-venv/bin/dbt \
+            propertyjourney360-airflow:ci --version
 
   secrets:
     name: Gitleaks

@@ -49,7 +49,46 @@ def run_check(name: str, command: tuple[str, ...]) -> CheckResult:
     )
 
 
-def run_locked_dependency_audit() -> CheckResult:
+def verify_image_source(*, name: str, image: str, expected_source_tree_sha256: str) -> CheckResult:
+    command = (
+        "docker",
+        "image",
+        "inspect",
+        image,
+        "--format",
+        '{{ index .Config.Labels "io.propertyjourney.source-tree-sha256" }}',
+    )
+    started = time.perf_counter()
+    process = subprocess.run(  # noqa: S603 - fixed local image inspection only
+        command,
+        cwd=ROOT,
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    observed = process.stdout.strip()
+    output = f"{process.stdout}\n{process.stderr}".strip()
+    exit_code = process.returncode
+    if exit_code == 0 and observed != expected_source_tree_sha256:
+        exit_code = 1
+        output = (
+            f"expected source tree {expected_source_tree_sha256}; "
+            f"image label reported {observed or 'MISSING'}"
+        )
+    return CheckResult(
+        name=name,
+        command=command,
+        exit_code=exit_code,
+        duration_seconds=round(time.perf_counter() - started, 6),
+        output_sha256=hashlib.sha256(output.encode()).hexdigest(),
+        output_tail="\n".join(output.splitlines()[-30:]),
+    )
+
+
+def run_locked_dependency_audit(
+    *, name: str = "locked_dependency_audit", project: str = ".", all_extras: bool = True
+) -> CheckResult:
+    extras = "--all-extras " if all_extras else ""
     export_command = (
         "docker",
         "run",
@@ -57,14 +96,14 @@ def run_locked_dependency_audit() -> CheckResult:
         "-v",
         f"{ROOT}:/workspace:ro",
         "-w",
-        "/workspace",
+        f"/workspace/{project}" if project != "." else "/workspace",
         PYTHON_IMAGE,
         "sh",
         "-c",
         (
             "python -m pip install --disable-pip-version-check --root-user-action=ignore "
             "--no-deps uv==0.12.5 "
-            ">/dev/null && uv export --quiet --locked --all-extras --no-emit-project "
+            f">/dev/null && uv export --quiet --locked {extras}--no-emit-project "
             "--format requirements.txt"
         ),
     )
@@ -99,7 +138,7 @@ def run_locked_dependency_audit() -> CheckResult:
         output = f"{output}\n{audited.stdout}\n{audited.stderr}".strip()
         exit_code = audited.returncode
     return CheckResult(
-        name="locked_dependency_audit",
+        name=name,
         command=(*export_command, "|", *audit_command),
         exit_code=exit_code,
         duration_seconds=round(time.perf_counter() - started, 6),
@@ -110,6 +149,10 @@ def run_locked_dependency_audit() -> CheckResult:
 
 def main() -> int:
     terraform_mount = f"{ROOT / 'infra' / 'terraform'}:/workspace"
+    source_tree_sha256 = hash_source_tree(ROOT)
+    operator_window_id = hashlib.sha256(
+        f"platform-evidence|{source_tree_sha256}".encode()
+    ).hexdigest()
     dbt_command = (
         "docker",
         "compose",
@@ -159,6 +202,10 @@ def main() -> int:
             ("curl", "--fail", "--silent", "--show-error", "http://127.0.0.1:18081/health"),
         ),
         (
+            "api_liveness",
+            ("curl", "--fail", "--silent", "--show-error", "http://127.0.0.1:18081/live"),
+        ),
+        (
             "airflow_health",
             (
                 "curl",
@@ -181,6 +228,29 @@ def main() -> int:
                 "list",
                 "--output",
                 "json",
+            ),
+        ),
+        (
+            "packaged_ingestion_extract",
+            (
+                "docker",
+                "compose",
+                "exec",
+                "-T",
+                "airflow-scheduler",
+                "pj360",
+                "ingest-batch",
+                "extract",
+                "--source",
+                "legacy_crm",
+                "--window-start",
+                "2026-01-01T00:00:00Z",
+                "--window-end",
+                "2027-01-01T00:00:00Z",
+                "--window-id",
+                operator_window_id,
+                "--mode",
+                "INCREMENTAL",
             ),
         ),
         ("dbt_parse", dbt_command),
@@ -233,7 +303,22 @@ def main() -> int:
     )
     checks = (
         *tuple(run_check(name, command) for name, command in commands),
+        verify_image_source(
+            name="api_image_source",
+            image="propertyjourney360-api:local",
+            expected_source_tree_sha256=source_tree_sha256,
+        ),
+        verify_image_source(
+            name="airflow_image_source",
+            image="propertyjourney360-airflow:3.3.1",
+            expected_source_tree_sha256=source_tree_sha256,
+        ),
         run_locked_dependency_audit(),
+        run_locked_dependency_audit(
+            name="dbt_locked_dependency_audit",
+            project="docker/airflow/dbt",
+            all_extras=False,
+        ),
     )
     checks_by_name = {check.name: check for check in checks}
     counts = json.loads(checks_by_name["postgres_seed_counts"].output_tail or "{}")
@@ -263,13 +348,15 @@ def main() -> int:
         generated_at=datetime.now(UTC),
         environment="local-docker",
         python_version="containerised Python 3.12 / host evidence runner",
-        source_tree_sha256=hash_source_tree(ROOT),
+        source_tree_sha256=source_tree_sha256,
         checks=checks,
         claims=claims,
         measurements={
             "running_services": services,
             "postgres_row_counts": counts,
             "api_image_id": checks_by_name["api_image"].output_tail,
+            "api_image_source_tree_sha256": checks_by_name["api_image_source"].output_tail,
+            "airflow_image_source_tree_sha256": checks_by_name["airflow_image_source"].output_tail,
         },
     )
     OUTPUT.write_text(report.model_dump_json(indent=2))

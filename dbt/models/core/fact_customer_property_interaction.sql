@@ -7,6 +7,8 @@
     on_schema_change='fail'
 ) }}
 
+{% set run_window_id = var('orchestration_window_id', '') %}
+
 select
     events.event_id as interaction_id,
     events.customer_id,
@@ -26,9 +28,10 @@ select
 from {{ ref('int_event_identity_attribution') }} events
 left join {{ ref('dim_property') }} properties
     on events.property_id = properties.property_source_id
-{% if is_incremental() %}
-where events.event_date >= date_sub(
-    (select coalesce(max(event_date), date('1970-01-01')) from {{ this }}),
-    interval {{ var('event_lookback_days', 3) }} day
-)
+{% if is_incremental() and not run_window_id %}
+where
+    events.event_date >= date_sub(
+        (select coalesce(max(event_date), date('1970-01-01')) from {{ this }}),
+        interval {{ var('event_lookback_days', 3) }} day
+    )
 {% endif %}

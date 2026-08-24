@@ -50,20 +50,23 @@ def open_case(
     issue_type: str,
     actor: str,
     note: str,
+    case_id: UUID | None = None,
+    opened_at: datetime | None = None,
 ) -> RemediationCase:
-    opened_at = datetime.now(UTC)
+    effective_opened_at = opened_at or datetime.now(UTC)
     event = RemediationEvent(
         from_status=None,
         to_status=RemediationStatus.OPEN,
         actor=actor,
-        occurred_at=opened_at,
+        occurred_at=effective_opened_at,
         note=note,
     )
     return RemediationCase(
+        case_id=case_id or uuid4(),
         source_system=source_system,
         source_record_id=source_record_id,
         issue_type=issue_type,
-        opened_at=opened_at,
+        opened_at=effective_opened_at,
         events=(event,),
     )
 

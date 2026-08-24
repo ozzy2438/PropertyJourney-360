@@ -18,13 +18,24 @@ with staged_issues as (
     from {{ ref('stg_support_cases') }} where dq_status != 'VALID'
     union all
     select 'marketing_consent', source_system, consent_event_id, ingestion_key, dq_status, ingested_at
-    from {{ ref('stg_marketing_consents') }} where dq_status != 'VALID'
+    from {{ ref('stg_marketing_consents') }}
+    where dq_status not in ('VALID', 'EXACT_DUPLICATE')
     union all
     select 'property_event', source_system, event_id, ingestion_key, dq_status, ingested_at
-    from {{ ref('stg_property_events') }} where dq_status != 'VALID'
+    from {{ ref('stg_property_events') }}
+    where dq_status not in ('VALID', 'EXACT_DUPLICATE')
     union all
     select 'property', source_system, property_source_id, ingestion_key, dq_status, ingested_at
     from {{ ref('stg_property_master') }} where dq_status != 'VALID'
+    union all
+    select 'market_record', 'public', market_record_id, market_record_id, dq_status, ingested_at
+    from {{ ref('stg_market_data') }} where dq_status != 'VALID'
+    union all
+    select 'demographic_record', 'abs', demographic_record_id, demographic_record_id, dq_status, ingested_at
+    from {{ ref('stg_abs_demographics') }} where dq_status != 'VALID'
+    union all
+    select 'economic_indicator', 'rba', indicator_record_id, indicator_record_id, dq_status, ingested_at
+    from {{ ref('stg_rba_indicators') }} where dq_status != 'VALID'
 ),
 identity_review as (
     select
@@ -63,6 +74,18 @@ ambiguous_anonymous_ids as (
     from {{ ref('int_event_identity_attribution') }}
     where attribution_method = 'AMBIGUOUS_ANONYMOUS_ID'
 ),
+identity_cluster_conflicts as (
+    select
+        'identity_cluster' as record_type,
+        identities.source_system,
+        identities.source_record_id,
+        identities.ingestion_key,
+        'VERIFIED_IDENTITY_CONFLICT' as dq_status,
+        identities.ingested_at
+    from {{ ref('int_identity_membership') }} membership
+    inner join {{ ref('int_customer_identity_union') }} identities using (source_identity_key)
+    where membership.cluster_conflict
+),
 all_issues as (
     select * from staged_issues
     union all
@@ -71,7 +94,10 @@ all_issues as (
     select * from volume_issues
     union all
     select * from ambiguous_anonymous_ids
-)
+    union all
+    select * from identity_cluster_conflicts
+),
+issues as (
 select
     {{ stable_key(['record_type', 'ingestion_key', 'dq_status']) }} as issue_id,
     record_type,
@@ -82,15 +108,28 @@ select
     case
         when dq_status in (
             'INVALID_KEY', 'UNSUPPORTED_SCHEMA', 'ORPHAN_SUBJECT',
-            'ORPHAN_PROPERTY', 'MISSING_IDENTIFY_SUBJECT'
+            'ORPHAN_PROPERTY', 'MISSING_IDENTIFY_SUBJECT', 'EVENT_ID_COLLISION'
         ) then 'HIGH'
-        when dq_status in ('REVIEW_REQUIRED', 'SOURCE_VOLUME_ANOMALY', 'AMBIGUOUS_ANONYMOUS_ID') then 'MEDIUM'
+        when dq_status in (
+            'REVIEW_REQUIRED', 'SOURCE_VOLUME_ANOMALY', 'AMBIGUOUS_ANONYMOUS_ID',
+            'VERIFIED_IDENTITY_CONFLICT', 'CONFLICTING_DUPLICATE'
+        ) then 'MEDIUM'
         else 'LOW'
     end as severity,
     case
-        when dq_status in ('REVIEW_REQUIRED', 'AMBIGUOUS_ANONYMOUS_ID') then 'IDENTITY_REVIEW'
+        when dq_status in (
+            'REVIEW_REQUIRED', 'AMBIGUOUS_ANONYMOUS_ID', 'VERIFIED_IDENTITY_CONFLICT'
+        ) then 'IDENTITY_REVIEW'
         when dq_status = 'SOURCE_VOLUME_ANOMALY' then 'VOLUME_ANOMALY'
+        when dq_status in ('CONFLICTING_DUPLICATE', 'EVENT_ID_COLLISION')
+            then 'DATA_INTEGRITY_COLLISION'
         else 'RECORD_VALIDATION'
     end as issue_type,
     ingested_at as detected_at
 from all_issues
+)
+select *
+from issues
+qualify row_number() over (
+    partition by issue_id order by detected_at desc, lineage_ingestion_key desc
+) = 1

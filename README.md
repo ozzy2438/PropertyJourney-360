@@ -18,13 +18,14 @@ source = accepted + quarantined + rejected + explained duplicates
   truth evaluation.
 - Salesforce OAuth/SOQL/Bulk API 2.0 connector with frozen windows, pagination, schema inspection,
   retry/backoff and rate-limit handling.
-- Licensed-source catalogue plus bounded live acquisition for RBA, City of Melbourne CLUE and
-  Vicmap Address; raw source payloads remain outside Git.
-- Checksummed local/GCS landing, deterministic BigQuery load jobs and explicit watermark controls.
-- 36 dbt models across staging, identity, core, marts and governance, including SCD2, quarantine,
-  remediation and reconciliation contracts.
-- Airflow 3.3 batch/event DAGs with parameterised backfill/replay and post-reconciliation watermark
-  commit gates.
+- Licensed-source catalogue plus bounded live acquisition for RBA, City of Melbourne CLUE, Vicmap
+  Address and three pinned ABS 2021 Census Victorian-SA2 dataflows; raw payloads remain outside Git.
+- Versioned contracts and source adapters for all 11 RAW assets, checksummed local/GCS landing,
+  deterministic BigQuery load jobs and explicit watermark controls.
+- 36 dbt models across staging, identity, core, marts and governance, including SCD2, persistent
+  identity assignments, quarantine, append-only remediation and window-scoped reconciliation.
+- Airflow 3.3 batch/event DAGs wired to packaged `pj360` operators with parameterised
+  backfill/replay and post-reconciliation watermark/checkpoint gates.
 - Versioned `IDENTIFY` event contract, idempotent Pub/Sub processing and bounded anonymous-session
   linkage.
 - Small authenticated FastAPI data product. Local mode reads SQLite; Cloud Run mode uses
@@ -53,15 +54,18 @@ Web events -> Pub/Sub -> validated at-least-once consumer -> BigQuery -> dbt
 
 ## Locally verified evidence
 
-- 77 tests passed with 86.27% branch coverage.
-- Held-out synthetic identity evaluation: 100% cluster precision, 98.1555% cluster recall and zero
-  false-positive merges (200 held-out customers; 653 source identities).
+- 169 tests passed with 86.00% branch coverage.
+- The Python reference resolver's held-out synthetic evaluation produced 100% cluster precision,
+  98.1555% cluster recall and zero false-positive merges (200 customers; 653 source identities).
+  The documented dbt warehouse subset is parse-verified but still requires BigQuery execution; the
+  Python-only trusted cross-system-ID rule is not claimed as warehouse parity.
 - Local vertical slice: 325 source identities fully reconciled; 280 accepted, 45 quarantined and
   zero unexplained records. Anonymous view/save activity was linked only after `IDENTIFY`.
-- Three authoritative public-source responses were fetched and content-hashed, including one
-  explicitly filtered 25-record Vicmap Address page; this is not a statewide completeness claim.
-- PostgreSQL 17, private local API and the minimal Airflow components ran healthy; two DAGs were
-  discovered but remain paused by default.
+- Six authoritative public-source responses were fetched and content-hashed: RBA, CLUE, one
+  explicitly filtered 25-record Vicmap Address page and three pinned ABS Census dataflows. The ABS
+  adapter joined 524 Victorian SA2 rows, retaining one incomplete special-area row for quarantine.
+- PostgreSQL 17, private local API and the minimal Airflow components ran healthy; both paused DAGs,
+  the packaged dbt CLI and a real 125-row PostgreSQL-to-immutable-landing operator task executed.
 - dbt parse, Terraform 1.15.9 validation, production-image build, locked dependency audit and
   Gitleaks worktree scan passed locally.
 
@@ -81,9 +85,16 @@ docker compose up --build --detach
 curl http://127.0.0.1:8000/health
 ```
 
-Airflow is then available only on loopback at `http://127.0.0.1:8080`. The local DAGs are paused and
-cloud extraction commands are intentionally unset. Use [.env.example](.env.example) as a names-only
-configuration guide; never put real secrets in Git.
+Airflow is then available only on loopback at `http://127.0.0.1:8080`. The local DAGs are paused;
+their repository operators are wired, while GCS/BigQuery/Pub/Sub and Salesforce coordinates remain
+unset until an owner configures those environments. Use [.env.example](.env.example) as a
+names-only configuration guide; never put real secrets in Git.
+
+For an owner-approved GCP run, layer `compose.gcp.yaml` over the default file. The override mounts
+one existing user or workload-federated ADC broker credential read-only, then batch, event and dbt
+workloads mint short-lived credentials for their separate `ingest`, `event_consumer` and `transform`
+service accounts. The ADC principal needs target-scoped `roles/iam.serviceAccountTokenCreator` on
+those three accounts. The default Compose file mounts no credential and performs no impersonation.
 
 ## Safety and remaining owner gates
 
@@ -91,6 +102,8 @@ configuration guide; never put real secrets in Git.
 - Proprietary property portals are not scraped; the unverified VIPS transaction layer is disabled.
 - Salesforce Developer Edition credentials/seed execution and a real incremental extraction remain
   owner-gated and unobserved.
+- VGV aggregate property sales and a bounded non-individual ABN extract still require source-access
+  resolution; no missing dataset is represented as loaded.
 - GCP project selection, WIF bootstrap, Terraform plan/apply, dbt execution against BigQuery and
   private Cloud Run verification remain owner-gated and unobserved.
 - The 7-14 day scheduled reliability run has not occurred; latency, success-rate and cloud-cost

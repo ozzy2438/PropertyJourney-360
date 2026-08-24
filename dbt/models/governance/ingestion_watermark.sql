@@ -18,3 +18,9 @@ union all
 select 'property_events', max(occurred_at), max(ingested_at), count(*) from {{ ref('stg_property_events') }}
 union all
 select 'property_master', max(source_updated_at), max(ingested_at), count(*) from {{ ref('stg_property_master') }}
+union all
+select 'property_market', max(source_retrieved_at), max(ingested_at), count(*) from {{ ref('stg_market_data') }}
+union all
+select 'abs_demographics', max(source_retrieved_at), max(ingested_at), count(*) from {{ ref('stg_abs_demographics') }}
+union all
+select 'rba_indicators', max(source_retrieved_at), max(ingested_at), count(*) from {{ ref('stg_rba_indicators') }}

@@ -1,10 +1,10 @@
 {
   "run_id": "local-20260824-100",
-  "source_tree_sha256": "952f2939200b9055ac2ae1a3750b1a75e94aa4fc16841893c1058477649f93a7",
+  "source_tree_sha256": "010048acb967c348f6aea985e385416321895ff392039c3dc062868342fe1b1a",
   "seed": 20260824,
   "synthetic_customer_count": 100,
   "source_identity_count": 325,
-  "canonical_customer_count": 104,
+  "canonical_customer_count": 100,
   "held_out_pair_metrics": {
     "evaluated_pairs": 1953,
     "true_positives": 69,
@@ -41,7 +41,7 @@
       "accounted": 325,
       "difference": 0
     },
-    "checked_at": "2026-08-24T03:59:36.303685Z",
+    "checked_at": "2026-08-24T07:25:18.193791Z",
     "explanation": "All source records are accounted for exactly once."
   },
   "landing_manifest": {
@@ -49,13 +49,13 @@
     "run_id": "local-20260824-100",
     "schema_version": "identity-record-v1",
     "extracted_at": "2026-08-24T00:00:00Z",
-    "landed_at": "2026-08-24T03:59:32.607624Z",
+    "landed_at": "2026-08-24T07:25:18.192218Z",
     "watermark": "2026-04-10T03:00:00+00:00",
     "record_count": 325,
     "sha256": "455ad84676de5f2ed67422fb53f0a48d4fbf755327b49093dc4bf65d28193871",
     "object_path": "synthetic_identities/extracted_date=2026-08-24/run_id=local-20260824-100/455ad84676de5f2ed67422fb53f0a48d4fbf755327b49093dc4bf65d28193871.jsonl"
   },
   "customer_journey_event_count": 3,
-  "generated_at": "2026-08-24T03:59:36.478454Z",
-  "evidence_scope": "Deterministic local synthetic execution only; not Salesforce, BigQuery or GCP evidence."
+  "generated_at": "2026-08-24T07:25:25.285560Z",
+  "evidence_scope": "Deterministic local synthetic execution only; held-out matcher metrics cover the full synthetic evaluation split while operational curation excludes quarantined records; not Salesforce, BigQuery or GCP evidence."
 }

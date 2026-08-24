@@ -6,8 +6,10 @@
     on_schema_change='fail'
 ) }}
 
+{% set pipeline_run_id = var('pipeline_run_id', invocation_id) %}
+
 select
-    '{{ invocation_id }}' as pipeline_run_id,
+    '{{ pipeline_run_id }}' as pipeline_run_id,
     min(reconciled_at) as transformed_at,
     max(reconciled_at) as reconciled_at,
     case
@@ -19,4 +21,4 @@ select
     '{{ target.name }}' as dbt_target,
     current_date('Australia/Melbourne') as audit_date
 from {{ ref('reconciliation_result') }}
-where pipeline_run_id = '{{ invocation_id }}'
+where pipeline_run_id = '{{ pipeline_run_id }}'

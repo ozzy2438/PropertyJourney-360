@@ -26,6 +26,8 @@ ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_OUTPUT = ROOT / "evidence" / "identity_evaluation.json"
 HASHED_INPUTS = (
     Path("config/identity_rules.yml"),
+    Path("dbt/dbt_project.yml"),
+    Path("dbt/models/intermediate/int_identity_candidates.sql"),
     Path("scripts/evaluate_identity.py"),
     Path("src/propertyjourney360/identity/matcher.py"),
     Path("src/propertyjourney360/identity/normalization.py"),

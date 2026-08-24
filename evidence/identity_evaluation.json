@@ -1,6 +1,6 @@
 {
   "report_version": 1,
-  "generated_at": "2026-08-24T03:47:49.333639Z",
+  "generated_at": "2026-08-24T07:25:40.295263Z",
   "ruleset_version": "identity-v1.1.0",
   "evaluation_seed": 20260825,
   "total_synthetic_customers": 1000,
@@ -42,8 +42,10 @@
     "method": "Wilson score"
   },
   "source_hashes": {
-    "config/identity_rules.yml": "e065a9835791d679da3a86964f3e3b9eae0f01faa2c341144678a1efd372a105",
-    "scripts/evaluate_identity.py": "d3ad8159c62951c71831b024a6e46c396670cf92827119f2960b61d8af570b5b",
+    "config/identity_rules.yml": "f9bba6e4d0d24848310a9723e75e40625e6e0e775183c977c849640e641ed198",
+    "dbt/dbt_project.yml": "1a9ead234fc711607f34331a7d28a48da35719496998e3724e77a4903ada5ec9",
+    "dbt/models/intermediate/int_identity_candidates.sql": "17cec6ae05ea31bab3c837f7d56d86c463cc4ee4a9037a003f3f13f4978b3243",
+    "scripts/evaluate_identity.py": "bd4c44da34a3ec22bd6e62f7496deac0b5d53b9d19b72749235539321d9737b4",
     "src/propertyjourney360/identity/matcher.py": "c0092cecc1ba6fb35b7260ea19eb9876dcf25e21429ce9604a83edcc13475335",
     "src/propertyjourney360/identity/normalization.py": "438097d6dbe52009d2969cd66fdf0732c16cb2bf0f56e29b865c46785c9cdbe4",
     "src/propertyjourney360/synthetic/identities.py": "bc6e4cbe4ae44ecb616dfe311568948c84310e86597b3e18181151753320139f"

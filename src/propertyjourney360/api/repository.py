@@ -7,7 +7,7 @@ from collections.abc import Iterator, Mapping
 from contextlib import contextmanager
 from datetime import UTC, datetime
 from pathlib import Path
-from typing import Any, Protocol
+from typing import Any, Literal, Protocol
 
 
 class CustomerReadRepository(Protocol):
@@ -78,6 +78,7 @@ class CustomerRepository:
                     customer_source_system TEXT,
                     customer_source_id TEXT,
                     property_id TEXT,
+                    price_observed REAL,
                     device_type TEXT,
                     payload_json TEXT NOT NULL
                 );
@@ -107,9 +108,16 @@ class CustomerRepository:
                 str(row[1])
                 for row in connection.execute("PRAGMA table_info(property_event)").fetchall()
             }
-            for column in ("customer_source_system", "customer_source_id"):
+            migration_columns = {
+                "customer_source_system": "TEXT",
+                "customer_source_id": "TEXT",
+                "price_observed": "REAL",
+            }
+            for column, data_type in migration_columns.items():
                 if column not in existing_columns:
-                    connection.execute(f"ALTER TABLE property_event ADD COLUMN {column} TEXT")
+                    connection.execute(
+                        f"ALTER TABLE property_event ADD COLUMN {column} {data_type}"
+                    )
 
     def ready(self) -> bool:
         try:
@@ -182,7 +190,7 @@ class CustomerRepository:
             rows = connection.execute(
                 """
                 SELECT e.event_id, e.event_type, e.occurred_at, e.received_at, e.session_id,
-                       e.property_id, e.device_type, l.link_reason
+                       e.property_id, e.price_observed, e.device_type, l.link_reason
                 FROM property_event AS e
                 JOIN event_identity_link AS l ON l.event_id = e.event_id
                 WHERE l.customer_id = ?
@@ -222,21 +230,39 @@ class CustomerRepository:
                 record,
             )
 
-    def insert_event(self, record: Mapping[str, Any]) -> bool:
+    def insert_event(
+        self, record: Mapping[str, Any]
+    ) -> Literal["INSERTED", "DUPLICATE", "COLLISION"]:
         with self.connect() as connection, connection:
             cursor = connection.execute(
                 """
                 INSERT OR IGNORE INTO property_event (
                     event_id, schema_version, event_type, occurred_at, received_at, session_id,
                     anonymous_id, customer_id, customer_source_system, customer_source_id,
-                    property_id, device_type, payload_json
+                    property_id, price_observed, device_type, payload_json
                 ) VALUES (:event_id, :schema_version, :event_type, :occurred_at, :received_at,
                           :session_id, :anonymous_id, :customer_id, :customer_source_system,
-                          :customer_source_id, :property_id, :device_type, :payload_json)
+                          :customer_source_id, :property_id, :price_observed, :device_type,
+                          :payload_json)
                 """,
                 record,
             )
-            return cursor.rowcount == 1
+            if cursor.rowcount == 1:
+                return "INSERTED"
+            existing = connection.execute(
+                """
+                SELECT event_id, schema_version, event_type, occurred_at, received_at, session_id,
+                       anonymous_id, customer_id, customer_source_system, customer_source_id,
+                       property_id, price_observed, device_type, payload_json
+                FROM property_event
+                WHERE event_id = ?
+                """,
+                (record["event_id"],),
+            ).fetchone()
+            if existing is None:
+                raise RuntimeError("event insert conflict did not resolve to a durable row")
+            expected = {key: record.get(key) for key in dict(existing)}
+            return "DUPLICATE" if dict(existing) == expected else "COLLISION"
 
     def session_customer(self, session_id: str) -> str | None:
         with self.connect() as connection:
@@ -277,12 +303,37 @@ class CustomerRepository:
                 (session_id, customer_id, identified_at.astimezone(UTC).isoformat()),
             )
 
+    def link_event_identity(
+        self,
+        *,
+        event_id: str,
+        customer_id: str,
+        link_reason: str,
+        linked_at: datetime,
+    ) -> int:
+        with self.connect() as connection, connection:
+            cursor = connection.execute(
+                """
+                INSERT OR IGNORE INTO event_identity_link (
+                    event_id, customer_id, link_reason, linked_at
+                ) VALUES (?, ?, ?, ?)
+                """,
+                (
+                    event_id,
+                    customer_id,
+                    link_reason,
+                    linked_at.astimezone(UTC).isoformat(),
+                ),
+            )
+            return cursor.rowcount
+
     def link_session_events(
         self,
         *,
         session_id: str,
         customer_id: str,
         occurred_after: datetime,
+        occurred_before: datetime,
         linked_at: datetime,
     ) -> int:
         with self.connect() as connection, connection:
@@ -293,13 +344,14 @@ class CustomerRepository:
                 )
                 SELECT event_id, ?, 'EXPLICIT_SESSION_IDENTIFY', ?
                 FROM property_event
-                WHERE session_id = ? AND occurred_at >= ?
+                WHERE session_id = ? AND occurred_at >= ? AND occurred_at <= ?
                 """,
                 (
                     customer_id,
                     linked_at.astimezone(UTC).isoformat(),
                     session_id,
                     occurred_after.astimezone(UTC).isoformat(),
+                    occurred_before.astimezone(UTC).isoformat(),
                 ),
             )
             return cursor.rowcount

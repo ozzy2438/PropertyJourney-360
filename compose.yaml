@@ -6,6 +6,7 @@ x-airflow-common: &airflow-common
     dockerfile: docker/airflow/Dockerfile
     args:
       AIRFLOW_IMAGE: apache/airflow:3.3.1-python3.12@sha256:b01a795dfbd113bbbfdf3ee169b8f27e9a0090ccef105f1a452b3594a11ed316
+      PJ360_SOURCE_TREE_SHA256: ${PJ360_SOURCE_TREE_SHA256:-UNVERIFIED}
   image: propertyjourney360-airflow:3.3.1
   user: "${AIRFLOW_UID:-50000}:0"
   environment: &airflow-environment
@@ -20,11 +21,40 @@ x-airflow-common: &airflow-common
     AIRFLOW__SCHEDULER__ENABLE_HEALTH_CHECK: "true"
     AIRFLOW__WEBSERVER__EXPOSE_CONFIG: "false"
     PJ360_ENVIRONMENT: local
+    PJ360_BATCH_INGEST_COMMAND: pj360 ingest-batch
+    PJ360_EVENT_INGEST_COMMAND: pj360 ingest-events
+    PJ360_INGEST_STATE_DIR: /opt/airflow/logs/pj360-state
+    PJ360_PUBLIC_RAW_DIR: /opt/airflow/data/raw/public
+    PJ360_PREPARED_RAW_DIR: /opt/airflow/data/raw/normalized
     PJ360_POSTGRES_DSN: postgresql://pj360:${POSTGRES_PASSWORD:-local-development-only}@postgres:5432/propertyjourney360
+    PJ360_DBT_LOG_PATH: /opt/airflow/logs/dbt
+    PJ360_DBT_TARGET_PATH: /opt/airflow/logs/dbt-target
+    GCS_RAW_BUCKET: ${GCS_RAW_BUCKET:-}
+    BIGQUERY_PROJECT: ${BIGQUERY_PROJECT:-}
+    BIGQUERY_RAW_DATASET: ${BIGQUERY_RAW_DATASET:-}
+    BIGQUERY_LOCATION: ${BIGQUERY_LOCATION:-australia-southeast1}
+    PJ360_INGEST_SERVICE_ACCOUNT: ${PJ360_INGEST_SERVICE_ACCOUNT:-}
+    PJ360_EVENT_CONSUMER_SERVICE_ACCOUNT: ${PJ360_EVENT_CONSUMER_SERVICE_ACCOUNT:-}
+    SALESFORCE_CLIENT_ID: ${SALESFORCE_CLIENT_ID:-}
+    SALESFORCE_CLIENT_SECRET: ${SALESFORCE_CLIENT_SECRET:-}
+    SALESFORCE_LOGIN_URL: ${SALESFORCE_LOGIN_URL:-https://login.salesforce.com}
+    SALESFORCE_API_VERSION: ${SALESFORCE_API_VERSION:-v65.0}
+    DBT_BIGQUERY_PROJECT: ${DBT_BIGQUERY_PROJECT:-}
+    DBT_BIGQUERY_DATASET: ${DBT_BIGQUERY_DATASET:-propertyjourney_dev}
+    DBT_BIGQUERY_RAW_DATASET: ${DBT_BIGQUERY_RAW_DATASET:-}
+    DBT_BIGQUERY_STAGING_DATASET: ${DBT_BIGQUERY_STAGING_DATASET:-}
+    DBT_BIGQUERY_CORE_DATASET: ${DBT_BIGQUERY_CORE_DATASET:-}
+    DBT_BIGQUERY_MARTS_DATASET: ${DBT_BIGQUERY_MARTS_DATASET:-}
+    DBT_BIGQUERY_GOVERNANCE_DATASET: ${DBT_BIGQUERY_GOVERNANCE_DATASET:-}
+    DBT_BIGQUERY_IMPERSONATE_SERVICE_ACCOUNT: ${DBT_BIGQUERY_IMPERSONATE_SERVICE_ACCOUNT:-}
+    PUBSUB_EVENT_SUBSCRIPTION: ${PUBSUB_EVENT_SUBSCRIPTION:-}
+    PUBSUB_DEAD_LETTER_TOPIC: ${PUBSUB_DEAD_LETTER_TOPIC:-}
+    PUBSUB_EMULATOR_HOST: ${PUBSUB_EMULATOR_HOST:-}
     PYTHONPATH: /opt/propertyjourney360/src
   volumes:
     - ./airflow/dags:/opt/airflow/dags:ro
     - ./dbt:/opt/airflow/dbt:ro
+    - ./data/raw:/opt/airflow/data/raw:ro
     - airflow-logs:/opt/airflow/logs
   networks:
     - platform
@@ -64,6 +94,7 @@ services:
       dockerfile: Dockerfile
       args:
         PYTHON_IMAGE: python:3.12.14-slim-bookworm@sha256:a116514e19457bcb7af7efe9c3dd0b9b71e85b317694e7882a1c52aa15a78134
+        PJ360_SOURCE_TREE_SHA256: ${PJ360_SOURCE_TREE_SHA256:-UNVERIFIED}
     image: propertyjourney360-api:local
     environment:
       PJ360_DATABASE_PATH: /app/data/propertyjourney360.db

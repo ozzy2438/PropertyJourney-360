@@ -36,6 +36,25 @@ new_customers as (
     left join current_records using (customer_id)
     where current_records.customer_id is null
 ),
+removed_customers as (
+    select
+        current_records.customer_id,
+        greatest(
+            coalesce(
+                safe_cast(nullif('{{ var('orchestration_window_end', '') }}', '') as timestamp),
+                current_timestamp()
+            ),
+            timestamp_add(current_records.valid_from, interval 1 microsecond)
+        ) as effective_at
+    from current_records
+    left join incoming using (customer_id)
+    where incoming.customer_id is null
+),
+closures as (
+    select customer_id, effective_at from changed
+    union all
+    select customer_id, effective_at from removed_customers
+),
 records_to_close as (
     select
         current_records.customer_history_sk,
@@ -52,13 +71,13 @@ records_to_close as (
         current_records.source_systems,
         current_records.identity_source_count,
         current_records.valid_from,
-        changed.effective_at as valid_to,
+        closures.effective_at as valid_to,
         false as is_current,
         current_records.profile_hash,
         current_records.source_record_updated_at,
         current_timestamp() as dbt_updated_at
     from current_records
-    inner join changed using (customer_id)
+    inner join closures using (customer_id)
 ),
 versions_to_insert as (
     select * from changed

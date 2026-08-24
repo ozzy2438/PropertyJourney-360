@@ -30,6 +30,7 @@ def test_dags_have_bounded_concurrency_and_no_implicit_catchup() -> None:
 
 def test_batch_dag_has_explicit_backfill_and_reconciliation_controls() -> None:
     source = _source(BATCH_DAG)
+    assert "At least one batch source must be selected" in source
     for token in (
         'DAG_ID = "propertyjourney_customer_360"',
         '"BACKFILL"',
@@ -38,9 +39,14 @@ def test_batch_dag_has_explicit_backfill_and_reconciliation_controls() -> None:
         '"window_end"',
         '"replay_id"',
         'group_id="reconciliation_gate"',
+        'group_id="publish_curated"',
+        '"pipeline_run_id"',
         "commit_watermarks",
+        "transformed >> reconciled >> published >> committed",
     ):
         assert token in source
+    assert '"orchestration_window_id": source_window_id' in source
+    assert '"pipeline_run_id": f"{DAG_ID}:{frozen_window[\'window_id\']}"' in source
 
 
 def test_event_dag_has_replay_limits_and_checkpoint_after_gate() -> None:
@@ -51,10 +57,19 @@ def test_event_dag_has_replay_limits_and_checkpoint_after_gate() -> None:
         '"BACKFILL"',
         '"REPLAY"',
         'group_id="event_reconciliation_gate"',
+        'group_id="publish_event_curated"',
+        '"pipeline_run_id"',
         "commit_event_checkpoint",
-        "consumed >> loaded >> transformed >> reconciled >> committed",
+        "transformed >> reconciled >> published >> committed",
     ):
         assert token in source
+    assert '"orchestration_window_id": source_window_id' in source
+    assert '"pipeline_run_id": f"{DAG_ID}:{frozen_window[\'window_id\']}"' in source
+    transform = source.split('@task_group(group_id="event_transform")', maxsplit=1)[1].split(
+        '@task_group(group_id="event_reconciliation_gate")', maxsplit=1
+    )[0]
+    for governance_model in ('"dq_issue"', '"dq_quarantine"', '"remediation_case"'):
+        assert governance_model in transform
 
 
 def test_window_is_frozen_once_and_commands_never_use_a_shell() -> None:
@@ -80,3 +95,42 @@ def test_business_rules_are_not_embedded_in_dags() -> None:
     lowered = combined.lower()
     for token in forbidden:
         assert token.lower() not in lowered
+
+
+def test_curated_models_are_not_selected_before_reconciliation_gate() -> None:
+    for path, publish_group in (
+        (BATCH_DAG, '@task_group(group_id="publish_curated")'),
+        (EVENT_DAG, '@task_group(group_id="publish_event_curated")'),
+    ):
+        source = _source(path)
+        pre_publish, publish = source.split(publish_group, maxsplit=1)
+        assert "path:models/core" not in pre_publish
+        assert "path:models/marts" not in pre_publish
+        assert "fact_customer_property_interaction" not in pre_publish
+        assert '"build"' in publish
+
+
+def test_runtime_gates_execute_critical_singular_tests_before_publish() -> None:
+    batch = _source(BATCH_DAG).split('@task_group(group_id="publish_curated")', maxsplit=1)[0]
+    event = _source(EVENT_DAG).split('@task_group(group_id="publish_event_curated")', maxsplit=1)[0]
+
+    for test_name in (
+        "valid_staging_business_keys_not_null",
+        "staging_business_keys_unique_per_window",
+        "valid_staging_rows_have_single_payload_variant",
+        "divergent_staging_payloads_are_fully_quarantined",
+        "orphan_cross_entity_references_are_quarantined",
+        "orphan_support_cases_are_quarantined",
+        "valid_events_have_unambiguous_subject",
+        "valid_immutable_event_keys_have_one_payload",
+        "immutable_event_first_write_wins",
+        "collision_issues_have_remediation_cases",
+    ):
+        assert f'"{test_name}"' in batch
+    for test_name in (
+        "valid_events_have_unambiguous_subject",
+        "valid_immutable_event_keys_have_one_payload",
+        "immutable_event_first_write_wins",
+        "collision_issues_have_remediation_cases",
+    ):
+        assert f'"{test_name}"' in event

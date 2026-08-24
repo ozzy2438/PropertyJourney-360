@@ -106,11 +106,26 @@ def run_configured_command(
 
 def run_dbt(arguments: Sequence[str]) -> None:
     """Invoke dbt with deployment-provided project/profile paths."""
+    if not arguments:
+        raise AirflowException("dbt arguments must include a subcommand")
     project_dir = os.getenv("PJ360_DBT_PROJECT_DIR", "/opt/airflow/dbt")
     profiles_dir = os.getenv("PJ360_DBT_PROFILES_DIR", "/opt/airflow/dbt")
+    log_path = os.getenv("PJ360_DBT_LOG_PATH", "/opt/airflow/logs/dbt")
+    target_path = os.getenv("PJ360_DBT_TARGET_PATH", "/opt/airflow/logs/dbt-target")
     run_configured_command(
         "PJ360_DBT_COMMAND",
-        ["--project-dir", project_dir, "--profiles-dir", profiles_dir, *arguments],
+        [
+            arguments[0],
+            "--project-dir",
+            project_dir,
+            "--profiles-dir",
+            profiles_dir,
+            "--log-path",
+            log_path,
+            "--target-path",
+            target_path,
+            *arguments[1:],
+        ],
         default_command="dbt",
     )
 

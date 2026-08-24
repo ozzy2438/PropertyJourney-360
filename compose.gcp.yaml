@@ -1,0 +1,21 @@
+x-gcp-airflow-runtime: &gcp-airflow-runtime
+  environment:
+    GOOGLE_APPLICATION_CREDENTIALS: /var/run/secrets/pj360/application-default-credentials.json
+    PJ360_INGEST_SERVICE_ACCOUNT: ${PJ360_INGEST_SERVICE_ACCOUNT:?Set the ingest service-account email}
+    PJ360_EVENT_CONSUMER_SERVICE_ACCOUNT: ${PJ360_EVENT_CONSUMER_SERVICE_ACCOUNT:?Set the event-consumer service-account email}
+    DBT_BIGQUERY_IMPERSONATE_SERVICE_ACCOUNT: ${DBT_BIGQUERY_IMPERSONATE_SERVICE_ACCOUNT:?Set the transform service-account email}
+  volumes:
+    - type: bind
+      source: ${PJ360_ADC_FILE:?Set the host path to an ADC broker credential}
+      target: /var/run/secrets/pj360/application-default-credentials.json
+      read_only: true
+
+services:
+  airflow-init:
+    <<: *gcp-airflow-runtime
+  airflow-api-server:
+    <<: *gcp-airflow-runtime
+  airflow-scheduler:
+    <<: *gcp-airflow-runtime
+  airflow-dag-processor:
+    <<: *gcp-airflow-runtime

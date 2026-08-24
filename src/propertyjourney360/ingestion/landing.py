@@ -26,6 +26,32 @@ class LandingManifest(BaseModel):
     object_path: str
 
 
+def validate_manifest_replay(
+    previous: LandingManifest,
+    expected: LandingManifest,
+    *,
+    location: str,
+) -> None:
+    """Reject an existing manifest unless every immutable replay field matches."""
+    immutable_fields = (
+        "source",
+        "run_id",
+        "schema_version",
+        "extracted_at",
+        "watermark",
+        "record_count",
+        "sha256",
+        "object_path",
+    )
+    mismatches = [
+        field for field in immutable_fields if getattr(previous, field) != getattr(expected, field)
+    ]
+    if mismatches:
+        raise RuntimeError(
+            f"existing {location} manifest conflicts with replay envelope: " + ", ".join(mismatches)
+        )
+
+
 def _canonical_json_line(record: Mapping[str, Any]) -> bytes:
     return json.dumps(record, sort_keys=True, separators=(",", ":"), default=str).encode() + b"\n"
 
@@ -74,6 +100,7 @@ class LocalRawLanding:
         )
         if manifest_path.exists():
             previous = LandingManifest.model_validate_json(manifest_path.read_text())
+            validate_manifest_replay(previous, manifest, location="local landing")
             return previous
         manifest_path.write_text(manifest.model_dump_json(indent=2))
         return manifest

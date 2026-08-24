@@ -13,58 +13,30 @@ sources:
     tables:
       - name: raw_salesforce_accounts
         columns:
-          - name: id
-            data_tests: [not_null]
-          - name: system_modstamp
-            data_tests: [not_null]
           - name: _ingested_at
             data_tests: [not_null]
       - name: raw_salesforce_contacts
         columns:
-          - name: id
-            data_tests: [not_null]
-          - name: system_modstamp
-            data_tests: [not_null]
           - name: _ingested_at
             data_tests: [not_null]
       - name: raw_salesforce_cases
         columns:
-          - name: id
-            data_tests: [not_null]
-          - name: system_modstamp
-            data_tests: [not_null]
           - name: _ingested_at
             data_tests: [not_null]
       - name: raw_legacy_customers
         columns:
-          - name: customer_id
-            data_tests: [not_null]
-          - name: updated_at
-            data_tests: [not_null]
           - name: _ingested_at
             data_tests: [not_null]
       - name: raw_support_cases
         columns:
-          - name: case_id
-            data_tests: [not_null]
-          - name: updated_at
-            data_tests: [not_null]
           - name: _ingested_at
             data_tests: [not_null]
       - name: raw_marketing_consents
         columns:
-          - name: consent_event_id
-            data_tests: [not_null]
-          - name: occurred_at
-            data_tests: [not_null]
           - name: _ingested_at
             data_tests: [not_null]
       - name: raw_property_events
         columns:
-          - name: event_id
-            data_tests: [not_null]
-          - name: occurred_at
-            data_tests: [not_null]
           - name: _ingested_at
             data_tests: [not_null]
       - name: raw_property_master
@@ -73,8 +45,6 @@ sources:
             warn_after: {count: 8, period: day}
             error_after: {count: 31, period: day}
         columns:
-          - name: property_id
-            data_tests: [not_null]
           - name: _ingested_at
             data_tests: [not_null]
       - name: raw_property_market
@@ -83,18 +53,12 @@ sources:
             warn_after: {count: 45, period: day}
             error_after: {count: 100, period: day}
         columns:
-          - name: geography_code
-            data_tests: [not_null]
-          - name: period_start
-            data_tests: [not_null]
           - name: _ingested_at
             data_tests: [not_null]
       - name: raw_abs_demographics
         config:
           freshness: null
         columns:
-          - name: geography_code
-            data_tests: [not_null]
           - name: _ingested_at
             data_tests: [not_null]
       - name: raw_rba_indicators
@@ -103,9 +67,19 @@ sources:
             warn_after: {count: 45, period: day}
             error_after: {count: 100, period: day}
         columns:
-          - name: series_id
-            data_tests: [not_null]
-          - name: observation_date
-            data_tests: [not_null]
           - name: _ingested_at
+            data_tests: [not_null]
+
+  - name: governance_input
+    description: Append-only operator events written outside dbt and folded into governed state.
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', target.project) }}"
+    schema: "{{ env_var('DBT_BIGQUERY_GOVERNANCE_DATASET', 'propertyjourney_governance') }}"
+    tables:
+      - name: remediation_event
+        columns:
+          - name: event_id
+            data_tests: [not_null, unique]
+          - name: remediation_case_id
+            data_tests: [not_null]
+          - name: occurred_at
             data_tests: [not_null]

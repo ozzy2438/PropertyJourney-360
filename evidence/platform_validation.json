@@ -1,9 +1,9 @@
 {
   "report_version": 1,
-  "generated_at": "2026-08-24T03:59:52.788772Z",
+  "generated_at": "2026-08-24T07:26:20.067825Z",
   "environment": "local-docker",
   "python_version": "containerised Python 3.12 / host evidence runner",
-  "source_tree_sha256": "952f2939200b9055ac2ae1a3750b1a75e94aa4fc16841893c1058477649f93a7",
+  "source_tree_sha256": "010048acb967c348f6aea985e385416321895ff392039c3dc062868342fe1b1a",
   "checks": [
     {
       "name": "compose_config",
@@ -14,7 +14,7 @@
         "--quiet"
       ],
       "exit_code": 0,
-      "duration_seconds": 0.138782,
+      "duration_seconds": 0.14669,
       "output_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
       "output_tail": ""
     },
@@ -29,7 +29,7 @@
         "running"
       ],
       "exit_code": 0,
-      "duration_seconds": 0.072963,
+      "duration_seconds": 0.090102,
       "output_sha256": "1a03c6f897c77085fa13e6c2d2cdc246662eba784c9e32c2c617f357ed446ded",
       "output_tail": "airflow-api-server\nairflow-dag-processor\nairflow-scheduler\napi\npostgres"
     },
@@ -43,9 +43,23 @@
         "http://127.0.0.1:18081/health"
       ],
       "exit_code": 0,
-      "duration_seconds": 0.008517,
+      "duration_seconds": 0.029025,
       "output_sha256": "a9c24c62ef9bf78d2362d292b3990eaf962b328a6c22d1cbafa8d2d91f4ef490",
       "output_tail": "{\"status\":\"ok\",\"liveness\":\"ok\",\"readiness\":\"ok\"}"
+    },
+    {
+      "name": "api_liveness",
+      "command": [
+        "curl",
+        "--fail",
+        "--silent",
+        "--show-error",
+        "http://127.0.0.1:18081/live"
+      ],
+      "exit_code": 0,
+      "duration_seconds": 0.00976,
+      "output_sha256": "a29ee2b15c494311c52521766e44af56a3ad2248e7a8ab465e5206463c13d288",
+      "output_tail": "{\"status\":\"ok\"}"
     },
     {
       "name": "airflow_health",
@@ -57,9 +71,9 @@
         "http://127.0.0.1:18082/api/v2/monitor/health"
       ],
       "exit_code": 0,
-      "duration_seconds": 0.010592,
-      "output_sha256": "09b3d7a2762853cd43eb27c915b968e2c360a30e5f0f2dc14a0ee1ff2b39f84e",
-      "output_tail": "{\"metadatabase\":{\"status\":\"healthy\"},\"scheduler\":{\"status\":\"healthy\",\"latest_scheduler_heartbeat\":\"2026-08-24T03:59:28.414173+00:00\"},\"triggerer\":{\"status\":null,\"latest_triggerer_heartbeat\":null},\"dag_processor\":{\"status\":\"healthy\",\"latest_dag_processor_heartbeat\":\"2026-08-24T03:59:29.694096+00:00\"}}"
+      "duration_seconds": 0.016938,
+      "output_sha256": "d6b2a98147e3bbd9436381e7a4ef4263fc60020b0e286ecbcdad1c49e3810552",
+      "output_tail": "{\"metadatabase\":{\"status\":\"healthy\"},\"scheduler\":{\"status\":\"healthy\",\"latest_scheduler_heartbeat\":\"2026-08-24T07:25:37.818592+00:00\"},\"triggerer\":{\"status\":null,\"latest_triggerer_heartbeat\":null},\"dag_processor\":{\"status\":\"healthy\",\"latest_dag_processor_heartbeat\":\"2026-08-24T07:25:38.364091+00:00\"}}"
     },
     {
       "name": "airflow_dags",
@@ -76,9 +90,36 @@
         "json"
       ],
       "exit_code": 0,
-      "duration_seconds": 1.212018,
+      "duration_seconds": 1.382617,
       "output_sha256": "57b21287e09095579ece7b1a6c67341645c6e89a6bc7c41f3e1a6208ea55910d",
       "output_tail": "[{\"dag_id\": \"propertyjourney_customer_360\", \"fileloc\": \"/opt/airflow/dags/propertyjourney_customer_360.py\", \"owners\": [\"data-platform\"], \"is_paused\": \"True\", \"bundle_name\": \"dags-folder\", \"bundle_version\": null}, {\"dag_id\": \"propertyjourney_events\", \"fileloc\": \"/opt/airflow/dags/propertyjourney_events.py\", \"owners\": [\"data-platform\"], \"is_paused\": \"True\", \"bundle_name\": \"dags-folder\", \"bundle_version\": null}]"
+    },
+    {
+      "name": "packaged_ingestion_extract",
+      "command": [
+        "docker",
+        "compose",
+        "exec",
+        "-T",
+        "airflow-scheduler",
+        "pj360",
+        "ingest-batch",
+        "extract",
+        "--source",
+        "legacy_crm",
+        "--window-start",
+        "2026-01-01T00:00:00Z",
+        "--window-end",
+        "2027-01-01T00:00:00Z",
+        "--window-id",
+        "aecf5c9f09f95a3e309b1d78d5411aa8eb15bd568a72a6a02183612108f16c22",
+        "--mode",
+        "INCREMENTAL"
+      ],
+      "exit_code": 0,
+      "duration_seconds": 0.728513,
+      "output_sha256": "43c4aaf4ab1702bb47f8f611da5f1113454b3f1e3ff3610e8e808a30f2dd68bf",
+      "output_tail": "{\n  \"source\": \"legacy_crm\",\n  \"window\": {\n    \"window_start\": \"2026-01-01T00:00:00Z\",\n    \"window_end\": \"2027-01-01T00:00:00Z\",\n    \"window_id\": \"aecf5c9f09f95a3e309b1d78d5411aa8eb15bd568a72a6a02183612108f16c22\",\n    \"mode\": \"INCREMENTAL\",\n    \"replay_id\": null\n  },\n  \"effective_window_start\": \"2026-01-01T00:00:00Z\",\n  \"effective_window_source\": \"REQUESTED\",\n  \"assets\": [\n    {\n      \"table_name\": \"raw_legacy_customers\",\n      \"manifest\": {\n        \"source\": \"raw_legacy_customers\",\n        \"run_id\": \"aecf5c9f09f95a3e309b1d78d5411aa8eb15bd568a72a6a02183612108f16c22\",\n        \"schema_version\": \"1\",\n        \"extracted_at\": \"2026-08-24T07:25:46.763384Z\",\n        \"landed_at\": \"2026-08-24T07:25:46.871442Z\",\n        \"watermark\": \"2027-01-01T00:00:00+00:00\",\n        \"record_count\": 125,\n        \"sha256\": \"8535626b9ddd9b722d6607bc451b991ac84ef3212870ebe630ddac96e4789240\",\n        \"object_path\": \"raw_legacy_customers/extracted_date=2026-08-24/run_id=aecf5c9f09f95a3e309b1d78d5411aa8eb15bd568a72a6a02183612108f16c22/8535626b9ddd9b722d6607bc451b991ac84ef3212870ebe630ddac96e4789240.jsonl\"\n      }\n    }\n  ],\n  \"extracted_at\": \"2026-08-24T07:25:46.763384Z\",\n  \"replayed_from_window_id\": null\n}"
     },
     {
       "name": "dbt_parse",
@@ -109,9 +150,9 @@
         "--no-partial-parse"
       ],
       "exit_code": 0,
-      "duration_seconds": 3.940496,
-      "output_sha256": "22a1dfe1845a7ba0e988758b2c603f0f60064f07de15bfee3cca32cb90f811d5",
-      "output_tail": "\u001b[0m03:59:40  Running with dbt=1.12.3\n\u001b[0m03:59:41  Registered adapter: bigquery=1.12.0\n\u001b[0m03:59:42  Performance info: /opt/airflow/logs/pj360-dbt-evidence-target/perf_info.json"
+      "duration_seconds": 6.027014,
+      "output_sha256": "db8af701b39b8af46cd8ae3da585ec73a03316e011793b9da6c6109992c44670",
+      "output_tail": "\u001b[0m07:25:48  Running with dbt=1.12.3\n\u001b[0m07:25:50  Registered adapter: bigquery=1.12.0\n\u001b[0m07:25:51  Performance info: /opt/airflow/logs/pj360-dbt-evidence-target/perf_info.json"
     },
     {
       "name": "terraform_validate",
@@ -127,7 +168,7 @@
         "validate"
       ],
       "exit_code": 0,
-      "duration_seconds": 0.629078,
+      "duration_seconds": 1.442553,
       "output_sha256": "bb2a672808b16eabc26cce078f4e3c5b49b27b6e7beb43fc7119e15a6fe3ed1a",
       "output_tail": "\u001b[32m\u001b[1mSuccess!\u001b[0m The configuration is valid.\n\u001b[0m"
     },
@@ -148,7 +189,7 @@
         "SELECT json_build_object('legacy_customers',(SELECT count(*) FROM legacy.customer),'support_customers',(SELECT count(*) FROM support.customer),'support_cases',(SELECT count(*) FROM support.case_record),'consent_events',(SELECT count(*) FROM marketing.consent_history),'orphan_support_cases',(SELECT count(*) FROM support.case_record AS cases LEFT JOIN support.customer AS customers ON cases.customer_source_record_id = customers.source_record_id WHERE customers.source_record_id IS NULL));"
       ],
       "exit_code": 0,
-      "duration_seconds": 0.120587,
+      "duration_seconds": 0.213792,
       "output_sha256": "8e7160a394a45332857e2e46b24143605b8e23b006aac30ad9557d04012bdee5",
       "output_tail": "{\"legacy_customers\" : 125, \"support_customers\" : 100, \"support_cases\" : 101, \"consent_events\" : 112, \"orphan_support_cases\" : 1}"
     },
@@ -163,9 +204,9 @@
         "{{.Id}}"
       ],
       "exit_code": 0,
-      "duration_seconds": 0.021096,
-      "output_sha256": "6ef07677c31b3447c6733547810f105ee1376b085b2b5bd6c95923beebe423a8",
-      "output_tail": "sha256:94dae27d707baa2795d3ce25d2c4a8d57044750bc1fbef1d93e7df16267c7b46"
+      "duration_seconds": 0.042158,
+      "output_sha256": "2f41215c98dec2f3b8209e4101716a272ca3a2430d68b191d603fd39202be12f",
+      "output_tail": "sha256:1cd7562574057bc238476aa7670677343ae0b4d00f707cddff5e1b899721410f"
     },
     {
       "name": "gitleaks_worktree",
@@ -179,9 +220,39 @@
         "."
       ],
       "exit_code": 0,
-      "duration_seconds": 0.973383,
-      "output_sha256": "29b8302c5b53d4b971e9838b7e6e63073d3b6a3604c0451c97ec2615cc3acc13",
-      "output_tail": "1:59PM INF scanned ~5773317 bytes (5.77 MB) in 927ms\n1:59PM INF no leaks found"
+      "duration_seconds": 0.698989,
+      "output_sha256": "b0e69f4381da4a15921e5c719efe2f650bbc97da7a9ce07d21f94584a6b8ca44",
+      "output_tail": "5:25PM INF scanned ~4152988 bytes (4.15 MB) in 637ms\n5:25PM INF no leaks found"
+    },
+    {
+      "name": "api_image_source",
+      "command": [
+        "docker",
+        "image",
+        "inspect",
+        "propertyjourney360-api:local",
+        "--format",
+        "{{ index .Config.Labels \"io.propertyjourney.source-tree-sha256\" }}"
+      ],
+      "exit_code": 0,
+      "duration_seconds": 0.067401,
+      "output_sha256": "bfec318a87166f0b78941efc99be7c13acc20977993b3ff18cdcf9102407bdbe",
+      "output_tail": "010048acb967c348f6aea985e385416321895ff392039c3dc062868342fe1b1a"
+    },
+    {
+      "name": "airflow_image_source",
+      "command": [
+        "docker",
+        "image",
+        "inspect",
+        "propertyjourney360-airflow:3.3.1",
+        "--format",
+        "{{ index .Config.Labels \"io.propertyjourney.source-tree-sha256\" }}"
+      ],
+      "exit_code": 0,
+      "duration_seconds": 0.093491,
+      "output_sha256": "bfec318a87166f0b78941efc99be7c13acc20977993b3ff18cdcf9102407bdbe",
+      "output_tail": "010048acb967c348f6aea985e385416321895ff392039c3dc062868342fe1b1a"
     },
     {
       "name": "locked_dependency_audit",
@@ -205,7 +276,33 @@
         "/dev/stdin"
       ],
       "exit_code": 0,
-      "duration_seconds": 7.099593,
+      "duration_seconds": 11.861268,
+      "output_sha256": "0d20dedb7dece9743f53ad72756a8ee62ab8f40b3384065d33c2c669a0b9d390",
+      "output_tail": "No known vulnerabilities found"
+    },
+    {
+      "name": "dbt_locked_dependency_audit",
+      "command": [
+        "docker",
+        "run",
+        "--rm",
+        "-v",
+        "/Users/osmanorka/PropertyJourney-360:/workspace:ro",
+        "-w",
+        "/workspace/docker/airflow/dbt",
+        "python:3.12.14-slim-bookworm@sha256:a116514e19457bcb7af7efe9c3dd0b9b71e85b317694e7882a1c52aa15a78134",
+        "sh",
+        "-c",
+        "python -m pip install --disable-pip-version-check --root-user-action=ignore --no-deps uv==0.12.5 >/dev/null && uv export --quiet --locked --no-emit-project --format requirements.txt",
+        "|",
+        "/Users/osmanorka/PropertyJourney-360/.venv/bin/pip-audit",
+        "--strict",
+        "--require-hashes",
+        "--requirement",
+        "/dev/stdin"
+      ],
+      "exit_code": 0,
+      "duration_seconds": 12.696347,
       "output_sha256": "0d20dedb7dece9743f53ad72756a8ee62ab8f40b3384065d33c2c669a0b9d390",
       "output_tail": "No known vulnerabilities found"
     }
@@ -245,6 +342,8 @@
       "consent_events": 112,
       "orphan_support_cases": 1
     },
-    "api_image_id": "sha256:94dae27d707baa2795d3ce25d2c4a8d57044750bc1fbef1d93e7df16267c7b46"
+    "api_image_id": "sha256:1cd7562574057bc238476aa7670677343ae0b4d00f707cddff5e1b899721410f",
+    "api_image_source_tree_sha256": "010048acb967c348f6aea985e385416321895ff392039c3dc062868342fe1b1a",
+    "airflow_image_source_tree_sha256": "010048acb967c348f6aea985e385416321895ff392039c3dc062868342fe1b1a"
   }
 }

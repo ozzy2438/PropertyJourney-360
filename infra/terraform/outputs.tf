@@ -38,6 +38,11 @@ output "github_terraform_service_account" {
   value       = google_service_account.workload["github_terraform"].email
 }
 
+output "github_image_builder_service_account" {
+  description = "Set this as protected GitHub Environment variable GCP_IMAGE_BUILDER_SERVICE_ACCOUNT."
+  value       = google_service_account.workload["github_image_builder"].email
+}
+
 output "cloud_run_api" {
   description = "Private Cloud Run service metadata; null until deploy_api is enabled."
   value = var.deploy_api ? {

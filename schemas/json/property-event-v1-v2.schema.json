@@ -13,6 +13,152 @@
     }
   },
   "additionalProperties": false,
+  "allOf": [
+    {
+      "anyOf": [
+        {
+          "properties": {
+            "anonymous_id": {
+              "minLength": 1,
+              "type": "string"
+            }
+          },
+          "required": [
+            "anonymous_id"
+          ]
+        },
+        {
+          "properties": {
+            "customer_id": {
+              "minLength": 1,
+              "type": "string"
+            }
+          },
+          "required": [
+            "customer_id"
+          ]
+        },
+        {
+          "properties": {
+            "customer_source_id": {
+              "minLength": 1,
+              "type": "string"
+            },
+            "customer_source_system": {
+              "minLength": 1,
+              "type": "string"
+            }
+          },
+          "required": [
+            "customer_source_system",
+            "customer_source_id"
+          ]
+        }
+      ]
+    },
+    {
+      "if": {
+        "properties": {
+          "customer_source_system": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "customer_source_system"
+        ]
+      },
+      "then": {
+        "properties": {
+          "customer_source_id": {
+            "minLength": 1,
+            "type": "string"
+          }
+        },
+        "required": [
+          "customer_source_id"
+        ]
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "customer_source_id": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "customer_source_id"
+        ]
+      },
+      "then": {
+        "properties": {
+          "customer_source_system": {
+            "minLength": 1,
+            "type": "string"
+          }
+        },
+        "required": [
+          "customer_source_system"
+        ]
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "event_type": {
+            "const": "IDENTIFY"
+          }
+        }
+      },
+      "then": {
+        "anyOf": [
+          {
+            "properties": {
+              "customer_id": {
+                "minLength": 1,
+                "type": "string"
+              }
+            },
+            "required": [
+              "customer_id"
+            ]
+          },
+          {
+            "properties": {
+              "customer_source_id": {
+                "minLength": 1,
+                "type": "string"
+              },
+              "customer_source_system": {
+                "minLength": 1,
+                "type": "string"
+              }
+            },
+            "required": [
+              "customer_source_system",
+              "customer_source_id"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "schema_version": {
+            "const": 1
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "device_type": {
+            "type": "null"
+          }
+        }
+      }
+    }
+  ],
   "properties": {
     "anonymous_id": {
       "anyOf": [
@@ -92,6 +238,19 @@
       "format": "date-time",
       "title": "Occurred At",
       "type": "string"
+    },
+    "price_observed": {
+      "anyOf": [
+        {
+          "minimum": 0,
+          "type": "number"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Price Observed"
     },
     "property_id": {
       "anyOf": [

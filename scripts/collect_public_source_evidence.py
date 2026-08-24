@@ -14,10 +14,16 @@ from propertyjourney360.evidence import (
     PublicSourceObservation,
 )
 from propertyjourney360.public_data.catalog import load_catalog
-from propertyjourney360.public_data.fetch import PublicFetchManifest
+from propertyjourney360.public_data.fetch import (
+    PublicFetchManifest,
+    verify_public_fetch_manifest,
+)
 
 ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_REQUIRED = (
+    "abs_c21_g01_sa2_vic",
+    "abs_c21_g02_sa2_vic",
+    "abs_c21_g37_sa2_vic",
     "melbourne_clue_business_context",
     "rba_f1_interest_rates",
     "vicmap_address",
@@ -41,15 +47,25 @@ def main() -> int:
     args = _parser().parse_args()
     required = tuple(args.require) or DEFAULT_REQUIRED
     catalog = load_catalog(args.catalog)
-    manifests = [
-        PublicFetchManifest.model_validate_json(path.read_text())
-        for path in args.raw_root.rglob("*.manifest.json")
-    ]
-    latest: dict[str, PublicFetchManifest] = {}
-    for manifest in manifests:
+    sources = {source.source_id: source for source in catalog.sources}
+    latest: dict[str, tuple[PublicFetchManifest, Path]] = {}
+    for manifest_path in sorted(args.raw_root.rglob("*.manifest.json")):
+        parsed = PublicFetchManifest.model_validate_json(manifest_path.read_text())
+        source = sources.get(parsed.source_id)
+        if source is None:
+            raise ValueError(f"public fetch manifest references unknown source: {parsed.source_id}")
+        manifest = verify_public_fetch_manifest(
+            raw_root=args.raw_root,
+            manifest_path=manifest_path,
+            source=source,
+        )
+        candidate = (manifest, manifest_path)
         previous = latest.get(manifest.source_id)
-        if previous is None or manifest.retrieved_at > previous.retrieved_at:
-            latest[manifest.source_id] = manifest
+        if previous is None or (manifest.retrieved_at, str(manifest_path)) > (
+            previous[0].retrieved_at,
+            str(previous[1]),
+        ):
+            latest[manifest.source_id] = candidate
     missing = sorted(set(required) - set(latest))
     if missing:
         raise SystemExit(f"missing required public fetch evidence: {', '.join(missing)}")
@@ -67,7 +83,7 @@ def main() -> int:
             attribution_text=manifest.attribution_text,
             limitations=manifest.limitations,
         )
-        for manifest in (latest[source_id] for source_id in sorted(required))
+        for manifest in (latest[source_id][0] for source_id in sorted(required))
     )
     report = PublicSourceEvidenceReport(
         generated_at=datetime.now(UTC),

@@ -44,9 +44,9 @@ sources:
   - source_id: vgv_property_sales_timeseries
     enabled: true
     publisher: Valuer-General Victoria
-    dataset_title: Victorian Property Sales Report time series
-    metadata_url: https://discover.data.vic.gov.au/dataset/victorian-property-sales-report-time-series
-    access_url: https://discover.data.vic.gov.au/dataset/victorian-property-sales-report-time-series
+    dataset_title: Victorian Property Sales Report median house by suburb time series
+    metadata_url: https://discover.data.vic.gov.au/dataset/victorian-property-sales-report-median-house-by-suburb-time-series
+    access_url: https://discover.data.vic.gov.au/dataset/victorian-property-sales-report-median-house-by-suburb-time-series
     access_method: metadata_resolved_file
     format: xlsx
     update_frequency: annual_with_revisions
@@ -59,7 +59,7 @@ sources:
     redistribution_status: allowed
     third_party_material_policy: exclude separately licensed material
     repo_policy: derived_allowed
-    quality_notes: Persist original workbook hash, release period and revision vintage.
+    quality_notes: Persist original workbook hash, release period and revision vintage; latest official workbook returned HTTP 403 to the automated fetcher on 2026-08-24.
 
   - source_id: abs_data_api
     enabled: true
@@ -80,6 +80,66 @@ sources:
     third_party_material_policy: verify each selected product before enabling
     repo_policy: derived_allowed
     quality_notes: Beta API has response size/time limits and may lag website releases.
+
+  - source_id: abs_c21_g01_sa2_vic
+    enabled: true
+    publisher: Australian Bureau of Statistics
+    dataset_title: Census 2021 G01 selected person characteristics, Victorian SA2
+    metadata_url: https://www.abs.gov.au/census/guide-census-data
+    access_url: "https://data.api.abs.gov.au/rest/data/ABS,C21_G01_SA2,1.0.0/3.P_1..SA2.2?startPeriod=2021&endPeriod=2021&dimensionAtObservation=AllDimensions&format=csvfilewithlabels"
+    access_method: sdmx_rest
+    format: csv
+    update_frequency: census_release
+    record_grain: total persons by 2021 Victorian SA2
+    geographic_coverage: Victoria Statistical Areas Level 2
+    query_or_filter: pinned C21_G01_SA2 v1.0.0; persons and total-persons measure; Victoria SA2 only
+    licence_name: Creative Commons Attribution 4.0 International
+    licence_url: https://creativecommons.org/licenses/by/4.0/
+    attribution_text: Based on Australian Bureau of Statistics 2021 Census data.
+    redistribution_status: allowed
+    third_party_material_policy: selected official ABS observations only
+    repo_policy: derived_allowed
+    quality_notes: Bounded official SDMX query; Census perturbation and product notes apply.
+
+  - source_id: abs_c21_g02_sa2_vic
+    enabled: true
+    publisher: Australian Bureau of Statistics
+    dataset_title: Census 2021 G02 median household income, Victorian SA2
+    metadata_url: https://www.abs.gov.au/census/guide-census-data
+    access_url: "https://data.api.abs.gov.au/rest/data/ABS,C21_G02_SA2,1.0.0/4..SA2.2?startPeriod=2021&endPeriod=2021&dimensionAtObservation=AllDimensions&format=csvfilewithlabels"
+    access_method: sdmx_rest
+    format: csv
+    update_frequency: census_release
+    record_grain: median weekly household income by 2021 Victorian SA2
+    geographic_coverage: Victoria Statistical Areas Level 2
+    query_or_filter: pinned C21_G02_SA2 v1.0.0; measure 4; Victoria SA2 only
+    licence_name: Creative Commons Attribution 4.0 International
+    licence_url: https://creativecommons.org/licenses/by/4.0/
+    attribution_text: Based on Australian Bureau of Statistics 2021 Census data.
+    redistribution_status: allowed
+    third_party_material_policy: selected official ABS observations only
+    repo_policy: derived_allowed
+    quality_notes: Bounded official SDMX query; published household-income exclusions apply.
+
+  - source_id: abs_c21_g37_sa2_vic
+    enabled: true
+    publisher: Australian Bureau of Statistics
+    dataset_title: Census 2021 G37 dwelling tenure, Victorian SA2
+    metadata_url: https://www.abs.gov.au/census/guide-census-data
+    access_url: "https://data.api.abs.gov.au/rest/data/ABS,C21_G37_SA2,1.0.0/1%2B2%2BR_T._T..SA2.2?startPeriod=2021&endPeriod=2021&dimensionAtObservation=AllDimensions&format=csvfilewithlabels"
+    access_method: sdmx_rest
+    format: csv
+    update_frequency: census_release
+    record_grain: selected tenure totals by 2021 Victorian SA2
+    geographic_coverage: Victoria Statistical Areas Level 2
+    query_or_filter: pinned C21_G37_SA2 v1.0.0; owned outright, mortgaged and rented totals; Victoria SA2 only
+    licence_name: Creative Commons Attribution 4.0 International
+    licence_url: https://creativecommons.org/licenses/by/4.0/
+    attribution_text: Based on Australian Bureau of Statistics 2021 Census data.
+    redistribution_status: allowed
+    third_party_material_policy: selected official ABS observations only
+    repo_policy: derived_allowed
+    quality_notes: Bounded official SDMX query; Census perturbation and product notes apply.
 
   - source_id: rba_f1_interest_rates
     enabled: true

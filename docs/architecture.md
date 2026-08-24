@@ -71,21 +71,29 @@ For each mutable API stream:
    retention lock.
 5. Validate every input into exactly one disposition: accepted, quarantined, rejected or explained
    duplicate.
-6. Append RAW, deduplicate curated data by a stable ingestion key and run dbt controls.
-7. Reconcile counts and hashes.
-8. Advance the watermark only after required loads, reconciliation and quality gates pass.
+6. Append into one of 11 explicitly provisioned RAW tables, retain one staged business key per
+   frozen window while preserving invalid-key rows, and resolve latest trusted state downstream.
+7. Reconcile the same frozen `_window_id` across every RAW asset and its staged disposition.
+8. Publish core/mart models only after that run's reconciliation passes; advance the watermark only
+   after publish and quality gates pass.
 
-The ingestion key is derived from source, entity, original source ID, source update time, operation
-and payload hash. Original source IDs and original payloads remain traceable.
+The warehouse ingestion key is derived from source system, source record ID and source update time;
+invalid null-key observations add their frozen window and row rank so they remain distinct. Original
+payload hashes and object paths are retained in immutable operator manifests, but a warehouse join
+from quarantine to those manifests remains a cloud implementation gate.
 
 ## Batch and event semantics
 
-Airflow handles bounded batch/incremental workflows and parameterised backfills. Pub/Sub is treated
-as at-least-once delivery; consumers acknowledge only after durable acceptance and deduplicate by
-`event_id`. “Exactly once” is not claimed end to end.
+Airflow handles bounded batch/incremental workflows and parameterised backfills through the packaged
+`pj360 ingest-batch` and `pj360 ingest-events` commands. Operator reports are immutable per
+source/window; incremental extracts resume from the consistent committed per-asset low watermark,
+and live watermarks advance only after load, dbt and reconciliation succeed. Pub/Sub is
+treated as at-least-once delivery; consumers route invalid messages durably before ACK, land valid
+events before ACK and deduplicate by `event_id`. “Exactly once” is not claimed end to end.
 
 Anonymous activity remains anonymous until an explicit `IDENTIFY` event supplies one unambiguous
-customer ID. Only a bounded session window is linked; competing authenticated IDs create
+customer ID. Only prior activity in the same session and configured 24-hour history window is
+linked, including activity landed in an earlier Airflow window; competing authenticated IDs create
 `REVIEW_REQUIRED`.
 
 ## Deployment topology

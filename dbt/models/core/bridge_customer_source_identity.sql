@@ -19,9 +19,15 @@ select
     identities.source_record_id,
     identities.source_updated_at,
     identities.ingestion_key as lineage_ingestion_key,
-    coalesce(decision_summary.resolution_decision, 'NO_MATCH') as resolution_decision,
+    case
+        when membership.cluster_conflict then 'REVIEW_REQUIRED'
+        else coalesce(decision_summary.resolution_decision, 'NO_MATCH')
+    end as resolution_decision,
     coalesce(decision_summary.highest_match_score, 0.0) as highest_match_score,
     membership.rule_version
 from {{ ref('int_customer_identity_union') }} identities
 inner join {{ ref('int_identity_membership') }} membership using (source_identity_key)
 left join decision_summary on identities.source_identity_key = decision_summary.identity_key
+where identities.dq_status = 'VALID'
+  and membership.is_active
+  and not membership.cluster_conflict

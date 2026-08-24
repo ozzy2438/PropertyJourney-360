@@ -7,7 +7,11 @@ from collections.abc import Callable, Iterable, Mapping
 from datetime import UTC, datetime
 from typing import Any
 
-from propertyjourney360.ingestion.landing import LandingManifest, _canonical_json_line
+from propertyjourney360.ingestion.landing import (
+    LandingManifest,
+    _canonical_json_line,
+    validate_manifest_replay,
+)
 
 
 class GCSRawLanding:
@@ -80,8 +84,10 @@ class GCSRawLanding:
             if not isinstance(exc, PreconditionFailed):
                 raise
             previous = LandingManifest.model_validate_json(manifest_blob.download_as_bytes())
-            if previous.sha256 != digest or previous.record_count != len(lines):
-                raise RuntimeError("existing GCS manifest does not match replay payload") from exc
+            try:
+                validate_manifest_replay(previous, manifest, location="GCS landing")
+            except RuntimeError as mismatch:
+                raise mismatch from exc
             return previous
         return manifest
 

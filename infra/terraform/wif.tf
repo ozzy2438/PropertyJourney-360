@@ -24,6 +24,7 @@ resource "google_iam_workload_identity_pool_provider" "github" {
     "attribute.repository"          = "assertion.repository"
     "attribute.repository_id"       = "assertion.repository_id"
     "attribute.repository_owner_id" = "assertion.repository_owner_id"
+    "attribute.workflow_ref"        = "assertion.workflow_ref"
   }
 
   attribute_condition = join(" && ", [
@@ -42,5 +43,11 @@ resource "google_iam_workload_identity_pool_provider" "github" {
 resource "google_service_account_iam_member" "github_workload_identity" {
   service_account_id = google_service_account.workload["github_terraform"].name
   role               = "roles/iam.workloadIdentityUser"
-  member             = "principalSet://iam.googleapis.com/${google_iam_workload_identity_pool.github.name}/attribute.repository_id/${var.github_repository_id}"
+  member             = "principalSet://iam.googleapis.com/${google_iam_workload_identity_pool.github.name}/attribute.workflow_ref/${var.github_repository}/.github/workflows/terraform.yml@${var.github_ref}"
+}
+
+resource "google_service_account_iam_member" "github_image_builder_workload_identity" {
+  service_account_id = google_service_account.workload["github_image_builder"].name
+  role               = "roles/iam.workloadIdentityUser"
+  member             = "principalSet://iam.googleapis.com/${google_iam_workload_identity_pool.github.name}/attribute.workflow_ref/${var.github_repository}/.github/workflows/deploy-api.yml@${var.github_ref}"
 }

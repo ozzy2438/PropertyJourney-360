@@ -9,6 +9,7 @@ from collections.abc import Callable, Sequence
 from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
+from urllib.parse import urlsplit
 
 import httpx
 from pydantic import BaseModel, ConfigDict, Field
@@ -22,6 +23,75 @@ _EXTENSIONS = {
     "xlsx": "xlsx",
     "zip_xml": "zip",
 }
+
+
+def verify_public_fetch_manifest(
+    *,
+    raw_root: Path,
+    manifest_path: Path,
+    source: SourceDefinition,
+) -> PublicFetchManifest:
+    """Load a fetch manifest only after re-validating its content-addressed payload."""
+    root = raw_root.resolve()
+    resolved_manifest = manifest_path.resolve(strict=True)
+    try:
+        manifest_relative = resolved_manifest.relative_to(root)
+    except ValueError as exc:
+        raise ValueError("public fetch manifest escapes the configured raw root") from exc
+
+    manifest = PublicFetchManifest.model_validate_json(resolved_manifest.read_text())
+    if manifest.source_id != source.source_id:
+        raise ValueError("public fetch manifest source_id does not match the catalog source")
+    if not manifest_relative.parts or manifest_relative.parts[0] != source.source_id:
+        raise ValueError("public fetch manifest is outside its catalog source directory")
+
+    catalog_claims = {
+        "publisher": source.publisher,
+        "dataset_title": source.dataset_title,
+        "licence_name": source.licence_name,
+        "licence_url": str(source.licence_url) if source.licence_url else None,
+        "attribution_text": source.attribution_text,
+        "redistribution_status": source.redistribution_status.value,
+        "repo_policy": source.repo_policy.value,
+    }
+    for field, expected in catalog_claims.items():
+        if getattr(manifest, field) != expected:
+            raise ValueError(f"public fetch manifest {field} does not match the catalog")
+    if not 200 <= manifest.status_code < 300:
+        raise ValueError("public fetch manifest does not record a successful HTTP response")
+    if manifest.retrieved_at.tzinfo is None:
+        raise ValueError("public fetch manifest retrieved_at must be timezone-aware")
+
+    object_path = Path(manifest.object_path)
+    if object_path.is_absolute() or any(part in {"", ".", ".."} for part in object_path.parts):
+        raise ValueError("public fetch object_path must be a normalized relative path")
+    try:
+        payload_path = (root / object_path).resolve(strict=True)
+    except FileNotFoundError as exc:
+        raise ValueError("public fetch payload does not exist") from exc
+    source_root = (root / source.source_id).resolve()
+    try:
+        payload_path.relative_to(source_root)
+    except ValueError as exc:
+        raise ValueError("public fetch payload escapes its catalog source directory") from exc
+    if not payload_path.is_file():
+        raise ValueError("public fetch payload is not a regular file")
+
+    expected_extension = _EXTENSIONS.get(source.format, "bin")
+    if payload_path.name != f"{manifest.sha256}.{expected_extension}":
+        raise ValueError("public fetch payload name or suffix does not match its digest")
+    if resolved_manifest.name != f"{manifest.sha256}.manifest.json":
+        raise ValueError("public fetch manifest name does not match its digest")
+    if payload_path.stat().st_size != manifest.byte_count:
+        raise ValueError("public fetch payload byte count does not match its manifest")
+
+    digest = hashlib.sha256()
+    with payload_path.open("rb") as payload_file:
+        for chunk in iter(lambda: payload_file.read(1024 * 1024), b""):
+            digest.update(chunk)
+    if digest.hexdigest() != manifest.sha256:
+        raise ValueError("public fetch payload SHA-256 does not match its manifest")
+    return manifest
 
 
 class PublicFetchManifest(BaseModel):
@@ -115,6 +185,63 @@ class PublicDataFetcher:
                 limitations=(source.quality_notes,),
             )
 
+    def fetch_resolved(
+        self,
+        source_id: str,
+        *,
+        resolved_url: str,
+        expected_sha256: str | None = None,
+    ) -> PublicFetchManifest:
+        """Fetch a bounded owner-resolved official file or SDMX query.
+
+        Metadata catalogues frequently rotate signed download URLs. Same-domain resolutions are
+        accepted directly; a cross-domain CDN resolution requires an independently supplied SHA-256
+        so a changed redirect cannot silently alter the selected release.
+        """
+
+        source = self.catalog.require_enabled(source_id)
+        allowed_methods = {"metadata_resolved_file", "sdmx_rest"}
+        if source.access_method not in allowed_methods:
+            raise ValueError(f"source {source_id} does not use a resolved acquisition method")
+        parsed = urlsplit(resolved_url)
+        if parsed.scheme != "https" or not parsed.hostname or parsed.username or parsed.password:
+            raise ValueError("resolved_url must be an absolute credential-free HTTPS URL")
+        catalog_hosts = {
+            urlsplit(str(source.access_url)).hostname,
+            urlsplit(str(source.metadata_url)).hostname,
+        }
+        if parsed.hostname not in catalog_hosts and expected_sha256 is None:
+            raise ValueError("cross-domain resolved URLs require --expected-sha256")
+        if expected_sha256 is not None and not re.fullmatch(r"[a-f0-9]{64}", expected_sha256):
+            raise ValueError("expected_sha256 must be 64 lowercase hexadecimal characters")
+
+        with self.client.stream("GET", resolved_url) as response:
+            response.raise_for_status()
+            self._validate_response(response)
+            if response.url.host not in catalog_hosts and expected_sha256 is None:
+                raise ValueError("cross-domain resolved redirects require --expected-sha256")
+            payload = bytearray()
+            for chunk in response.iter_bytes():
+                payload.extend(chunk)
+                if len(payload) > self.max_bytes:
+                    raise ValueError(
+                        f"response exceeded configured maximum of {self.max_bytes} bytes"
+                    )
+            digest = hashlib.sha256(payload).hexdigest()
+            if expected_sha256 is not None and digest != expected_sha256:
+                raise ValueError("resolved response did not match expected_sha256")
+            return self._persist(
+                source=source,
+                requested_url=resolved_url,
+                response=response,
+                payload=bytes(payload),
+                response_record_count=None,
+                limitations=(
+                    source.quality_notes,
+                    "Exact bounded release/query URL was resolved by the operator and recorded.",
+                ),
+            )
+
     def fetch_arcgis_page(
         self,
         source_id: str,
@@ -148,13 +275,18 @@ class PublicDataFetcher:
             "f": "json",
         }
         requested_url = str(source.access_url)
-        response = self.client.get(requested_url, params=params)
-        response.raise_for_status()
-        self._validate_response(response)
-        if len(response.content) > self.max_bytes:
-            raise ValueError(f"response exceeded configured maximum of {self.max_bytes} bytes")
+        with self.client.stream("GET", requested_url, params=params) as response:
+            response.raise_for_status()
+            self._validate_response(response)
+            payload = bytearray()
+            for chunk in response.iter_bytes():
+                payload.extend(chunk)
+                if len(payload) > self.max_bytes:
+                    raise ValueError(
+                        f"response exceeded configured maximum of {self.max_bytes} bytes"
+                    )
         try:
-            document: dict[str, Any] = response.json()
+            document: dict[str, Any] = json.loads(payload)
         except json.JSONDecodeError as exc:
             raise ValueError("ArcGIS response was not valid JSON") from exc
         if document.get("error"):
@@ -169,7 +301,7 @@ class PublicDataFetcher:
             source=source,
             requested_url=str(response.request.url),
             response=response,
-            payload=response.content,
+            payload=bytes(payload),
             response_record_count=len(features),
             limitations=(
                 source.quality_notes,

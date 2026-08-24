@@ -1,0 +1,46 @@
+version: 2
+
+models:
+  - name: int_customer_identity_union
+    description: All latest source identities, including invalid records for governance accounting.
+    columns:
+      - name: source_identity_key
+        data_tests: [not_null, unique]
+      - name: source_system
+        data_tests:
+          - accepted_values:
+              arguments: {values: ['salesforce', 'legacy_crm', 'support']}
+  - name: int_identity_candidates
+    description: Explainable candidate pairs generated only from shared contact/address evidence.
+    columns:
+      - name: candidate_id
+        data_tests: [not_null, unique]
+      - name: decision
+        data_tests:
+          - accepted_values:
+              arguments: {values: ['AUTO_MATCH', 'REVIEW_REQUIRED', 'NO_MATCH']}
+  - name: int_identity_decisions
+    description: Candidate outcomes plus an explicit NO_MATCH for eligible identities without a candidate.
+    columns:
+      - name: candidate_id
+        data_tests: [not_null, unique]
+      - name: decision
+        data_tests:
+          - accepted_values:
+              arguments: {values: ['AUTO_MATCH', 'REVIEW_REQUIRED', 'NO_MATCH']}
+  - name: int_identity_membership
+    description: Connected components of high-confidence AUTO_MATCH edges; review candidates never merge.
+    columns:
+      - name: source_identity_key
+        data_tests: [not_null, unique]
+      - name: customer_id
+        data_tests: [not_null]
+  - name: int_event_identity_attribution
+    description: Direct and anonymous-to-known event attribution with the evidence method retained.
+    columns:
+      - name: event_id
+        data_tests: [not_null, unique]
+      - name: attribution_method
+        data_tests:
+          - accepted_values:
+              arguments: {values: ['DIRECT_CUSTOMER_ID', 'DIRECT_SOURCE_ID', 'ANONYMOUS_IDENTIFY_LINK', 'AMBIGUOUS_ANONYMOUS_ID', 'UNATTRIBUTED']}

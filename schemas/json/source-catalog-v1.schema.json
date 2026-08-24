@@ -1,0 +1,186 @@
+{
+  "$defs": {
+    "RedistributionStatus": {
+      "enum": [
+        "allowed",
+        "restricted",
+        "unverified"
+      ],
+      "title": "RedistributionStatus",
+      "type": "string"
+    },
+    "RepoPolicy": {
+      "enum": [
+        "raw_out_of_git",
+        "fixture_only",
+        "derived_allowed",
+        "prohibited"
+      ],
+      "title": "RepoPolicy",
+      "type": "string"
+    },
+    "SourceDefinition": {
+      "additionalProperties": false,
+      "properties": {
+        "access_method": {
+          "title": "Access Method",
+          "type": "string"
+        },
+        "access_url": {
+          "format": "uri",
+          "maxLength": 2083,
+          "minLength": 1,
+          "title": "Access Url",
+          "type": "string"
+        },
+        "attribution_text": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Attribution Text"
+        },
+        "dataset_title": {
+          "title": "Dataset Title",
+          "type": "string"
+        },
+        "enabled": {
+          "title": "Enabled",
+          "type": "boolean"
+        },
+        "format": {
+          "title": "Format",
+          "type": "string"
+        },
+        "geographic_coverage": {
+          "title": "Geographic Coverage",
+          "type": "string"
+        },
+        "licence_name": {
+          "title": "Licence Name",
+          "type": "string"
+        },
+        "licence_url": {
+          "anyOf": [
+            {
+              "format": "uri",
+              "maxLength": 2083,
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Licence Url"
+        },
+        "metadata_url": {
+          "format": "uri",
+          "maxLength": 2083,
+          "minLength": 1,
+          "title": "Metadata Url",
+          "type": "string"
+        },
+        "publisher": {
+          "title": "Publisher",
+          "type": "string"
+        },
+        "quality_notes": {
+          "title": "Quality Notes",
+          "type": "string"
+        },
+        "query_or_filter": {
+          "title": "Query Or Filter",
+          "type": "string"
+        },
+        "record_grain": {
+          "title": "Record Grain",
+          "type": "string"
+        },
+        "redistribution_status": {
+          "$ref": "#/$defs/RedistributionStatus"
+        },
+        "repo_policy": {
+          "$ref": "#/$defs/RepoPolicy"
+        },
+        "source_id": {
+          "title": "Source Id",
+          "type": "string"
+        },
+        "suppression_policy": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Suppression Policy"
+        },
+        "third_party_material_policy": {
+          "title": "Third Party Material Policy",
+          "type": "string"
+        },
+        "update_frequency": {
+          "title": "Update Frequency",
+          "type": "string"
+        }
+      },
+      "required": [
+        "source_id",
+        "enabled",
+        "publisher",
+        "dataset_title",
+        "metadata_url",
+        "access_url",
+        "access_method",
+        "format",
+        "update_frequency",
+        "record_grain",
+        "geographic_coverage",
+        "query_or_filter",
+        "licence_name",
+        "licence_url",
+        "attribution_text",
+        "redistribution_status",
+        "third_party_material_policy",
+        "repo_policy",
+        "quality_notes"
+      ],
+      "title": "SourceDefinition",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "catalog_version": {
+      "title": "Catalog Version",
+      "type": "integer"
+    },
+    "sources": {
+      "items": {
+        "$ref": "#/$defs/SourceDefinition"
+      },
+      "title": "Sources",
+      "type": "array"
+    },
+    "terms_checked_at": {
+      "format": "date",
+      "title": "Terms Checked At",
+      "type": "string"
+    }
+  },
+  "required": [
+    "catalog_version",
+    "terms_checked_at",
+    "sources"
+  ],
+  "title": "SourceCatalog",
+  "type": "object"
+}

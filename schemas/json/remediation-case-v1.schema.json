@@ -1,0 +1,106 @@
+{
+  "$defs": {
+    "RemediationEvent": {
+      "additionalProperties": false,
+      "properties": {
+        "actor": {
+          "title": "Actor",
+          "type": "string"
+        },
+        "evidence": {
+          "additionalProperties": true,
+          "title": "Evidence",
+          "type": "object"
+        },
+        "from_status": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/RemediationStatus"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "note": {
+          "title": "Note",
+          "type": "string"
+        },
+        "occurred_at": {
+          "format": "date-time",
+          "title": "Occurred At",
+          "type": "string"
+        },
+        "to_status": {
+          "$ref": "#/$defs/RemediationStatus"
+        }
+      },
+      "required": [
+        "from_status",
+        "to_status",
+        "actor",
+        "occurred_at",
+        "note"
+      ],
+      "title": "RemediationEvent",
+      "type": "object"
+    },
+    "RemediationStatus": {
+      "description": "Auditable remediation workflow states.",
+      "enum": [
+        "OPEN",
+        "IN_REVIEW",
+        "RESOLVED",
+        "REPLAYED",
+        "VERIFIED",
+        "CLOSED"
+      ],
+      "title": "RemediationStatus",
+      "type": "string"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "case_id": {
+      "format": "uuid",
+      "title": "Case Id",
+      "type": "string"
+    },
+    "events": {
+      "default": [],
+      "items": {
+        "$ref": "#/$defs/RemediationEvent"
+      },
+      "title": "Events",
+      "type": "array"
+    },
+    "issue_type": {
+      "title": "Issue Type",
+      "type": "string"
+    },
+    "opened_at": {
+      "format": "date-time",
+      "title": "Opened At",
+      "type": "string"
+    },
+    "source_record_id": {
+      "title": "Source Record Id",
+      "type": "string"
+    },
+    "source_system": {
+      "title": "Source System",
+      "type": "string"
+    },
+    "status": {
+      "$ref": "#/$defs/RemediationStatus",
+      "default": "OPEN"
+    }
+  },
+  "required": [
+    "source_system",
+    "source_record_id",
+    "issue_type"
+  ],
+  "title": "RemediationCase",
+  "type": "object"
+}

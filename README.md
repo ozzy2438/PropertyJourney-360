@@ -18,8 +18,9 @@ source = accepted + quarantined + rejected + explained duplicates
   truth evaluation.
 - Salesforce OAuth/SOQL/Bulk API 2.0 connector with frozen windows, pagination, schema inspection,
   retry/backoff and rate-limit handling.
-- Licensed-source catalogue plus bounded live acquisition for RBA, City of Melbourne CLUE, Vicmap
-  Address and three pinned ABS 2021 Census Victorian-SA2 dataflows; raw payloads remain outside Git.
+- Licensed-source catalogue plus bounded acquisition for VGV annual suburb medians, RBA, City of
+  Melbourne CLUE, Vicmap Address and three pinned ABS 2021 Census Victorian-SA2 dataflows; raw
+  payloads remain outside Git.
 - Versioned contracts and source adapters for all 11 RAW assets, checksummed local/GCS landing,
   deterministic BigQuery load jobs and explicit watermark controls.
 - 36 dbt models across staging, identity, core, marts and governance, including SCD2, persistent
@@ -54,7 +55,7 @@ Web events -> Pub/Sub -> validated at-least-once consumer -> BigQuery -> dbt
 
 ## Locally verified evidence
 
-- 169 tests passed with 86.00% branch coverage.
+- 176 tests passed with 86.09% branch coverage.
 - The Python reference resolver's held-out synthetic evaluation produced 100% cluster precision,
   98.1555% cluster recall and zero false-positive merges (200 customers; 653 source identities).
   The documented dbt warehouse subset is parse-verified but still requires BigQuery execution; the
@@ -62,8 +63,10 @@ Web events -> Pub/Sub -> validated at-least-once consumer -> BigQuery -> dbt
 - Local vertical slice: 325 source identities fully reconciled; 280 accepted, 45 quarantined and
   zero unexplained records. Anonymous view/save activity was linked only after `IDENTIFY`.
 - Six authoritative public-source responses were fetched and content-hashed: RBA, CLUE, one
-  explicitly filtered 25-record Vicmap Address page and three pinned ABS Census dataflows. The ABS
-  adapter joined 524 Victorian SA2 rows, retaining one incomplete special-area row for quarantine.
+  explicitly filtered 25-record Vicmap Address page and three pinned ABS Census dataflows. Three
+  owner-downloaded, hash-pinned VGV annual workbooks produced 16,241 house/unit/land suburb-year
+  median rows. The ABS adapter joined 524 Victorian SA2 rows, retaining one incomplete special-area
+  row for quarantine.
 - PostgreSQL 17, private local API and the minimal Airflow components ran healthy; both paused DAGs,
   the packaged dbt CLI and a real 125-row PostgreSQL-to-immutable-landing operator task executed.
 - dbt parse, Terraform 1.15.9 validation, production-image build, locked dependency audit and
@@ -102,8 +105,8 @@ those three accounts. The default Compose file mounts no credential and performs
 - Proprietary property portals are not scraped; the unverified VIPS transaction layer is disabled.
 - Salesforce Developer Edition credentials/seed execution and a real incremental extraction remain
   owner-gated and unobserved.
-- VGV aggregate property sales and a bounded non-individual ABN extract still require source-access
-  resolution; no missing dataset is represented as loaded.
+- A bounded non-individual ABN extract still requires source-access resolution; no missing dataset
+  is represented as loaded.
 - GCP project selection, WIF bootstrap, Terraform plan/apply, dbt execution against BigQuery and
   private Cloud Run verification remain owner-gated and unobserved.
 - The 7-14 day scheduled reliability run has not occurred; latency, success-rate and cloud-cost

@@ -90,6 +90,58 @@ def test_arcgis_fetch_requires_explicit_scope(monkeypatch: pytest.MonkeyPatch) -
         _invoke(monkeypatch, ["fetch-public", "--source", "vicmap"])
 
 
+def test_prepare_vgv_command_dispatches_pinned_workbooks(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    calls: list[dict[str, Any]] = []
+
+    def fake_prepare(**kwargs: Any) -> JsonResult:
+        calls.append(kwargs)
+        return JsonResult()
+
+    monkeypatch.setattr(cli, "prepare_vgv_market", fake_prepare)
+    _invoke(
+        monkeypatch,
+        [
+            "prepare-vgv",
+            "--houses",
+            "houses.xlsx",
+            "--units",
+            "units.xlsx",
+            "--land",
+            "land.xlsx",
+            "--acquired-at",
+            "2026-08-25T08:00:00Z",
+        ],
+    )
+
+    call = calls[0]
+    assert call["workbook_paths"] == {
+        "HOUSE": Path("houses.xlsx"),
+        "UNIT": Path("units.xlsx"),
+        "LAND": Path("land.xlsx"),
+    }
+    assert call["acquired_at"].isoformat() == "2026-08-25T08:00:00+00:00"
+
+
+def test_prepare_vgv_command_requires_timezone(monkeypatch: pytest.MonkeyPatch) -> None:
+    with pytest.raises(SystemExit, match="must include a timezone"):
+        _invoke(
+            monkeypatch,
+            [
+                "prepare-vgv",
+                "--houses",
+                "houses.xlsx",
+                "--units",
+                "units.xlsx",
+                "--land",
+                "land.xlsx",
+                "--acquired-at",
+                "2026-08-25T08:00:00",
+            ],
+        )
+
+
 def test_serve_command(monkeypatch: pytest.MonkeyPatch) -> None:
     calls: list[tuple[str, str, int]] = []
     monkeypatch.setattr(

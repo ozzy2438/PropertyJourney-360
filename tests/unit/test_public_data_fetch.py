@@ -251,7 +251,7 @@ def test_same_domain_resolved_url_cannot_redirect_cross_domain_without_hash(
     tmp_path: Path,
 ) -> None:
     def handler(request: httpx.Request) -> httpx.Response:
-        if request.url.host == "discover.data.vic.gov.au":
+        if request.url.host == "www.land.vic.gov.au":
             return httpx.Response(
                 302,
                 headers={"location": "https://cdn.example.test/release.xlsx"},
@@ -273,7 +273,7 @@ def test_same_domain_resolved_url_cannot_redirect_cross_domain_without_hash(
         fetcher.fetch_resolved(
             "vgv_property_sales_timeseries",
             resolved_url=(
-                "https://discover.data.vic.gov.au/dataset/"
-                "victorian-property-sales-report-time-series/download"
+                "https://www.land.vic.gov.au/valuations/resources-and-reports/"
+                "property-sales-statistics/download"
             ),
         )

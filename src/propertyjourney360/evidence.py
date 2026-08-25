@@ -21,6 +21,7 @@ _GENERATED_EVIDENCE = {
     Path("evidence/coverage.json"),
     Path("evidence/identity_evaluation.json"),
     Path("evidence/public_source_validation.json"),
+    Path("evidence/vgv_preparation_validation.json"),
 }
 
 

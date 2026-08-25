@@ -6,6 +6,7 @@ with normalized as (
         nullif(trim(cast(property_type as string)), '') as property_type,
         safe_cast(median_price as numeric) as median_price,
         safe_cast(sales_volume as int64) as sales_volume,
+        nullif(trim(cast(quality_marker as string)), '') as quality_marker,
         nullif(trim(cast(source_dataset as string)), '') as source_dataset,
         safe_cast(source_retrieved_at as timestamp) as source_retrieved_at,
         lower(nullif(trim(cast(source_payload_sha256 as string)), '')) as source_payload_sha256,
@@ -24,6 +25,7 @@ fingerprinted as (
             property_type,
             median_price,
             sales_volume,
+            quality_marker,
             source_dataset,
             source_retrieved_at,
             source_payload_sha256,
@@ -71,8 +73,11 @@ select
         when source_retrieved_at is null or source_payload_object is null
             or not regexp_contains(source_payload_sha256, r'^[a-f0-9]{64}$')
             then 'INVALID_PROVENANCE'
-        when median_price is null or sales_volume is null
-            or median_price < 0 or sales_volume < 0 then 'INVALID_MEASURE'
+        when quality_marker is not null and quality_marker not in ('^', '*')
+            then 'INVALID_QUALITY_MARKER'
+        when (median_price is null and sales_volume is null)
+            or coalesce(median_price < 0, false) or coalesce(sales_volume < 0, false)
+            then 'INVALID_MEASURE'
         else 'VALID'
     end as dq_status
 from ranked

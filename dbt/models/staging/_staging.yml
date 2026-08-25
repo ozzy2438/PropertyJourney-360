@@ -74,7 +74,7 @@ models:
       - name: dq_status
         data_tests:
           - accepted_values:
-              arguments: {values: ['VALID', 'INVALID_KEY', 'CONFLICTING_DUPLICATE', 'INVALID_PROVENANCE', 'INVALID_MEASURE']}
+              arguments: {values: ['VALID', 'INVALID_KEY', 'CONFLICTING_DUPLICATE', 'INVALID_PROVENANCE', 'INVALID_QUALITY_MARKER', 'INVALID_MEASURE']}
 
   - name: stg_abs_demographics
     columns:

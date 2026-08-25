@@ -1,5 +1,5 @@
 catalog_version: 1
-terms_checked_at: 2026-08-24
+terms_checked_at: 2026-08-25
 sources:
   - source_id: vicmap_address
     enabled: true
@@ -44,9 +44,9 @@ sources:
   - source_id: vgv_property_sales_timeseries
     enabled: true
     publisher: Valuer-General Victoria
-    dataset_title: Victorian Property Sales Report median house by suburb time series
-    metadata_url: https://discover.data.vic.gov.au/dataset/victorian-property-sales-report-median-house-by-suburb-time-series
-    access_url: https://discover.data.vic.gov.au/dataset/victorian-property-sales-report-median-house-by-suburb-time-series
+    dataset_title: Annual house, unit and vacant-land median prices by Victorian suburb
+    metadata_url: https://www.land.vic.gov.au/valuations/resources-and-reports/property-sales-statistics
+    access_url: https://www.land.vic.gov.au/valuations/resources-and-reports/property-sales-statistics
     access_method: metadata_resolved_file
     format: xlsx
     update_frequency: annual_with_revisions
@@ -59,7 +59,7 @@ sources:
     redistribution_status: allowed
     third_party_material_policy: exclude separately licensed material
     repo_policy: derived_allowed
-    quality_notes: Persist original workbook hash, release period and revision vintage; latest official workbook returned HTTP 403 to the automated fetcher on 2026-08-24.
+    quality_notes: Pinned 2025 annual workbooks are browser-acquired because Cloudflare blocks the automated client; preserve file hash, quality markers and release vintage, exclude preliminary 2026 values, and never infer absent sales volumes.
 
   - source_id: abs_data_api
     enabled: true

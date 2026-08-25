@@ -57,7 +57,7 @@ performance claim.
 
 ## Local platform evidence
 
-The current local gate contains 169 passing tests and 86.00% branch coverage. The Docker API image,
+The current local gate contains 176 passing tests and 86.09% branch coverage. The Docker API image,
 Compose model, healthy loopback API/Airflow services, two parsed DAGs, a packaged 125-row ingestion
 task, 36-model dbt parse, Terraform validation, PostgreSQL source counts, locked dependency audit
 and Gitleaks scan were executed on 2026-08-24. Exact command tails, output hashes, timestamps and

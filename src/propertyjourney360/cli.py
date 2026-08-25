@@ -5,6 +5,7 @@ from __future__ import annotations
 import argparse
 import json
 import os
+from datetime import datetime
 from pathlib import Path
 from typing import NoReturn
 
@@ -21,6 +22,7 @@ from propertyjourney360.ingestion.operator import (
 from propertyjourney360.pipeline import run_local_pipeline
 from propertyjourney360.public_data.catalog import load_catalog
 from propertyjourney360.public_data.fetch import PublicDataFetcher
+from propertyjourney360.public_data.vgv import prepare_vgv_market
 from propertyjourney360.synthetic.postgres import seed_operational_postgres
 
 
@@ -54,6 +56,24 @@ def _parser() -> argparse.ArgumentParser:
     fetch.add_argument("--include-geometry", action="store_true")
     fetch.add_argument("--resolved-url", help="exact official file or bounded SDMX query URL")
     fetch.add_argument("--expected-sha256", help="required for a cross-domain resolved URL")
+
+    prepare_vgv = commands.add_parser(
+        "prepare-vgv", help="validate and normalize the pinned VGV annual workbooks"
+    )
+    prepare_vgv.add_argument("--houses", type=Path, required=True)
+    prepare_vgv.add_argument("--units", type=Path, required=True)
+    prepare_vgv.add_argument("--land", type=Path, required=True)
+    prepare_vgv.add_argument("--raw-root", type=Path, default=Path("data/raw/public"))
+    prepare_vgv.add_argument(
+        "--output", type=Path, default=Path("data/raw/normalized/raw_property_market.jsonl")
+    )
+    prepare_vgv.add_argument(
+        "--evidence", type=Path, default=Path("evidence/vgv_preparation_validation.json")
+    )
+    prepare_vgv.add_argument(
+        "--acquired-at",
+        help="optional timezone-aware acquisition timestamp; defaults to the current UTC time",
+    )
 
     serve = commands.add_parser("serve", help="run the internal API")
     serve.add_argument("--host", default="127.0.0.1")
@@ -167,6 +187,23 @@ def main() -> None:
             else:
                 manifest = fetcher.fetch_file(args.source)
         print(manifest.model_dump_json(indent=2))
+    elif args.command == "prepare-vgv":
+        acquired_at = None
+        if args.acquired_at:
+            try:
+                acquired_at = datetime.fromisoformat(args.acquired_at.replace("Z", "+00:00"))
+            except ValueError:
+                _fail("--acquired-at must be an ISO-8601 timestamp")
+            if acquired_at.utcoffset() is None:
+                _fail("--acquired-at must include a timezone")
+        report = prepare_vgv_market(
+            workbook_paths={"HOUSE": args.houses, "UNIT": args.units, "LAND": args.land},
+            raw_root=args.raw_root,
+            prepared_path=args.output,
+            evidence_path=args.evidence,
+            acquired_at=acquired_at,
+        )
+        print(report.model_dump_json(indent=2))
     elif args.command == "serve":
         uvicorn.run("propertyjourney360.api.main:app", host=args.host, port=args.port)
     elif args.command == "seed-postgres":

@@ -164,6 +164,7 @@ RAW_CONTRACTS: dict[str, RawAssetContract] = {
             "property_type",
             "median_price",
             "sales_volume",
+            "quality_marker",
             "source_dataset",
             "source_retrieved_at",
             "source_payload_sha256",

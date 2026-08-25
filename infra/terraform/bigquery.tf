@@ -57,7 +57,7 @@ locals {
     ]
     raw_property_market = [
       "geography_code", "geography_type", "period_start", "property_type", "median_price",
-      "sales_volume", "source_dataset", "source_retrieved_at", "source_payload_sha256",
+      "sales_volume", "quality_marker", "source_dataset", "source_retrieved_at", "source_payload_sha256",
       "source_payload_object",
     ]
     raw_abs_demographics = [

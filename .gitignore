@@ -15,6 +15,7 @@ build/
 logs/
 data/raw/
 data/processed/
+data/ingestion-state/
 evidence/generated/
 *.db
 *.sqlite*

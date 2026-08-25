@@ -202,6 +202,14 @@ def test_public_source_provenance_survives_raw_staging_and_property_core() -> No
             assert field in _read(f"dbt/models/staging/{model}"), model
 
 
+def test_market_staging_accepts_median_only_vgv_rows_and_preserves_markers() -> None:
+    market = _read("dbt/models/staging/stg_market_data.sql")
+    assert "quality_marker" in market
+    assert "quality_marker not in ('^', '*')" in market
+    assert "median_price is null and sales_volume is null" in market
+    assert "median_price is null or sales_volume is null" not in market
+
+
 def test_duplicate_collisions_open_durable_remediation_cases() -> None:
     issues = _read("dbt/models/governance/dq_issue.sql")
     remediation = _read("dbt/models/governance/remediation_case.sql")

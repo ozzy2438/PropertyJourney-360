@@ -50,10 +50,14 @@ Machine-readable reports live in [`evidence/`](evidence/).
 4. Deploy the API by immutable image digest, verify private invocation and capture cost/bytes.
 5. If approved, run the paused schedules for 7-14 days before reporting sustained reliability.
 
-## Remaining non-credential data gate
+## ABN integration: optional, deferred, currently out of scope
 
-Choose an ABN access path: the two public bulk ZIP resources are roughly 496 MiB each, while the
-bounded web service requires an owner-issued authentication GUID. Verify the selected release and
-normalise only non-individual ABN rows.
+The owner has deferred the ABN organisation-extract source. `abn_lookup_bulk_extract` is set to
+`enabled: false` in `config/sources.yml`, so `pj360 fetch-public` and `pj360 validate-sources`
+treat it as unavailable and no download, GUID request or normalisation runs against it. The
+catalogue entry and the downstream Salesforce/dbt ABN-field wiring are left in place unmodified;
+re-enabling the source, choosing an access path (the two public bulk ZIP resources are roughly
+496 MiB each, or the bounded web service which requires an owner-issued authentication GUID) and
+acquiring the data all remain a future, separately-approved step.
 
 No merge, production apply, secret creation or sustained paid run is performed automatically.

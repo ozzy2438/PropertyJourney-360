@@ -4,8 +4,60 @@ from pathlib import Path
 
 import pytest
 
+from propertyjourney360.ingestion import landing as landing_module
 from propertyjourney360.ingestion.landing import LandingManifest, LocalRawLanding
 from propertyjourney360.ingestion.watermarks import WatermarkStore
+
+
+def test_local_landing_write_is_atomic_and_recoverable_after_simulated_crash(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """A crash mid-write must never leave a half-written file under the final content-addressed
+    name, and a retry afterward must succeed rather than hitting a permanent digest mismatch."""
+
+    real_atomic_write = landing_module._atomic_write
+
+    def crashing_write(path: Path, payload: bytes) -> None:
+        path.parent.mkdir(parents=True, exist_ok=True)
+        temporary = path.with_name(f".{path.name}.tmp")
+        temporary.write_bytes(payload[: max(len(payload) // 2, 1)])
+        raise RuntimeError("simulated process kill mid-write")
+
+    monkeypatch.setattr(landing_module, "_atomic_write", crashing_write)
+    landing = LocalRawLanding(tmp_path)
+    extracted_at = datetime(2026, 8, 24, tzinfo=UTC)
+    records = [{"id": "1", "value": "a"}]
+
+    with pytest.raises(RuntimeError, match="simulated process kill"):
+        landing.land(
+            source="legacy_customers",
+            run_id="run-1",
+            schema_version="1",
+            records=records,
+            extracted_at=extracted_at,
+        )
+
+    assert list(tmp_path.rglob("*.jsonl")) == []
+    assert list(tmp_path.rglob("*.manifest.json")) == []
+
+    monkeypatch.setattr(landing_module, "_atomic_write", real_atomic_write)
+    manifest = landing.land(
+        source="legacy_customers",
+        run_id="run-1",
+        schema_version="1",
+        records=records,
+        extracted_at=extracted_at,
+    )
+    assert (tmp_path / manifest.object_path).exists()
+
+    replayed = landing.land(
+        source="legacy_customers",
+        run_id="run-1",
+        schema_version="1",
+        records=records,
+        extracted_at=extracted_at,
+    )
+    assert replayed == manifest
 
 
 def test_content_addressed_landing_is_idempotent(tmp_path: Path) -> None:

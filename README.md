@@ -105,8 +105,8 @@ those three accounts. The default Compose file mounts no credential and performs
 - Proprietary property portals are not scraped; the unverified VIPS transaction layer is disabled.
 - Salesforce Developer Edition credentials/seed execution and a real incremental extraction remain
   owner-gated and unobserved.
-- A bounded non-individual ABN extract still requires source-access resolution; no missing dataset
-  is represented as loaded.
+- ABN integration is optional and currently out of scope: it is deferred by owner decision, disabled
+  in `config/sources.yml` (`enabled: false`), and no missing dataset is represented as loaded.
 - GCP project selection, WIF bootstrap, Terraform plan/apply, dbt execution against BigQuery and
   private Cloud Run verification remain owner-gated and unobserved.
 - The 7-14 day scheduled reliability run has not occurred; latency, success-rate and cloud-cost

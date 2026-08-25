@@ -56,6 +56,14 @@ def _canonical_json_line(record: Mapping[str, Any]) -> bytes:
     return json.dumps(record, sort_keys=True, separators=(",", ":"), default=str).encode() + b"\n"
 
 
+def _atomic_write(path: Path, payload: bytes) -> None:
+    """Write via a same-directory temp file then rename, so a crash never leaves a partial file."""
+    path.parent.mkdir(parents=True, exist_ok=True)
+    temporary = path.with_name(f".{path.name}.tmp")
+    temporary.write_bytes(payload)
+    temporary.replace(path)
+
+
 class LocalRawLanding:
     """Write immutable JSONL and a manifest; identical reruns reuse the same object."""
 
@@ -85,7 +93,7 @@ class LocalRawLanding:
             if hashlib.sha256(data_path.read_bytes()).hexdigest() != digest:
                 raise RuntimeError(f"immutable landing object was modified: {data_path}")
         else:
-            data_path.write_bytes(payload)
+            _atomic_write(data_path, payload)
 
         manifest = LandingManifest(
             source=source,
@@ -102,5 +110,5 @@ class LocalRawLanding:
             previous = LandingManifest.model_validate_json(manifest_path.read_text())
             validate_manifest_replay(previous, manifest, location="local landing")
             return previous
-        manifest_path.write_text(manifest.model_dump_json(indent=2))
+        _atomic_write(manifest_path, manifest.model_dump_json(indent=2).encode())
         return manifest

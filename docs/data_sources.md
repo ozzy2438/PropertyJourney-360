@@ -12,7 +12,7 @@ ArcGIS); parser/schema hashes and object URI are added by the subsequent landing
 | [Victorian Property Sales Report](https://www.land.vic.gov.au/valuations/resources-and-reports/property-sales-statistics) | Valuer-General Victoria annual XLSX reports | CC BY 4.0 | Pinned 2015-2025 house/unit/land suburb medians; browser acquisition because Cloudflare blocks the automated client |
 | [ABS Data API](https://www.abs.gov.au/statistics/application-programming-interfaces-apis/data-api-user-guide) | ABS SDMX REST; keyless beta API with response limits | CC BY 4.0 for the selected Census products | Pinned C21 G01/G02/G37 v1.0.0 queries for Victorian SA2 only |
 | [RBA statistical tables](https://www.rba.gov.au/statistics/tables/) | Official CSV/XLSX tables; no general supported public REST API assumed | RBA notice has series-specific conditions | RBA-authored F1 series only; preserve vintage |
-| [ABN Lookup public bulk extract](https://abr.business.gov.au/Tools/BulkExtract) | Weekly ZIP/XML public subset | CC BY 3.0 Australia | Active non-individual entities; minimise fields |
+| [ABN Lookup public bulk extract](https://abr.business.gov.au/Tools/BulkExtract) | Weekly ZIP/XML public subset | CC BY 3.0 Australia | **Optional, deferred, out of scope for now** — `enabled: false` in `config/sources.yml`; active non-individual entities, minimise fields, once re-enabled |
 | [City of Melbourne CLUE](https://www.melbourne.vic.gov.au/census-land-use-and-employment-clue) | Annual confidentialised aggregate CSV export | CC BY 4.0 | Regional context; suppressed cells remain suppressed |
 
 ## Hard exclusions

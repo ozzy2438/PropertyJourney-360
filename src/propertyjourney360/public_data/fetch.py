@@ -25,6 +25,14 @@ _EXTENSIONS = {
 }
 
 
+def _atomic_write(path: Path, payload: bytes) -> None:
+    """Write via a same-directory temp file then rename, so a crash never leaves a partial file."""
+    path.parent.mkdir(parents=True, exist_ok=True)
+    temporary = path.with_name(f".{path.name}.tmp")
+    temporary.write_bytes(payload)
+    temporary.replace(path)
+
+
 def verify_public_fetch_manifest(
     *,
     raw_root: Path,
@@ -339,7 +347,7 @@ class PublicDataFetcher:
             if hashlib.sha256(data_path.read_bytes()).hexdigest() != digest:
                 raise RuntimeError(f"content-addressed public data was modified: {data_path}")
         else:
-            data_path.write_bytes(payload)
+            _atomic_write(data_path, payload)
 
         manifest = PublicFetchManifest(
             source_id=source.source_id,
@@ -368,5 +376,5 @@ class PublicDataFetcher:
             if previous.sha256 != digest:
                 raise RuntimeError("public fetch manifest does not match content digest")
             return previous
-        manifest_path.write_text(manifest.model_dump_json(indent=2))
+        _atomic_write(manifest_path, manifest.model_dump_json(indent=2).encode())
         return manifest

@@ -5,6 +5,7 @@ from pathlib import Path
 import httpx
 import pytest
 
+from propertyjourney360.public_data import fetch as fetch_module
 from propertyjourney360.public_data.catalog import load_catalog
 from propertyjourney360.public_data.fetch import (
     PublicDataFetcher,
@@ -13,6 +14,49 @@ from propertyjourney360.public_data.fetch import (
 
 CATALOG = Path(__file__).parents[2] / "config" / "sources.yml"
 NOW = datetime(2026, 8, 24, 1, 2, 3, tzinfo=UTC)
+
+
+def test_public_fetch_write_is_atomic_and_recoverable_after_simulated_crash(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """A crash mid-write must never leave a half-written file under the final content-addressed
+    name, and a retry afterward must succeed rather than hitting a permanent digest mismatch."""
+    payload = b"DATE,CASH_RATE\n2026-08-01,3.60\n"
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        return httpx.Response(
+            200, content=payload, headers={"content-type": "text/csv"}, request=request
+        )
+
+    catalog = load_catalog(CATALOG)
+    fetcher = PublicDataFetcher(
+        catalog=catalog,
+        root=tmp_path,
+        client=httpx.Client(transport=httpx.MockTransport(handler)),
+        now=lambda: NOW,
+    )
+
+    real_atomic_write = fetch_module._atomic_write
+
+    def crashing_write(path: Path, write_payload: bytes) -> None:
+        path.parent.mkdir(parents=True, exist_ok=True)
+        temporary = path.with_name(f".{path.name}.tmp")
+        temporary.write_bytes(write_payload[: max(len(write_payload) // 2, 1)])
+        raise RuntimeError("simulated process kill mid-write")
+
+    monkeypatch.setattr(fetch_module, "_atomic_write", crashing_write)
+    with pytest.raises(RuntimeError, match="simulated process kill"):
+        fetcher.fetch_file("rba_f1_interest_rates")
+
+    assert list(tmp_path.rglob("*.csv")) == []
+    assert list(tmp_path.rglob("*.manifest.json")) == []
+
+    monkeypatch.setattr(fetch_module, "_atomic_write", real_atomic_write)
+    manifest = fetcher.fetch_file("rba_f1_interest_rates")
+    assert (tmp_path / manifest.object_path).read_bytes() == payload
+
+    replayed = fetcher.fetch_file("rba_f1_interest_rates")
+    assert replayed == manifest
 
 
 def test_file_fetch_is_bounded_content_addressed_and_attributed(tmp_path: Path) -> None:

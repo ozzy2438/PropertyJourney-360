@@ -162,7 +162,7 @@ sources:
     quality_notes: Capture vintage because series can be revised or withdrawn.
 
   - source_id: abn_lookup_bulk_extract
-    enabled: true
+    enabled: false
     publisher: Australian Business Register
     dataset_title: ABN Lookup public bulk extract
     metadata_url: https://abr.business.gov.au/Tools/BulkExtract
@@ -179,7 +179,10 @@ sources:
     redistribution_status: allowed
     third_party_material_policy: public extract only; never use restricted agency ABR product
     repo_policy: raw_out_of_git
-    quality_notes: Trading Names stopped receiving updates in 2012 and are not identity keys.
+    quality_notes: >-
+      Trading Names stopped receiving updates in 2012 and are not identity keys. Optional; deferred
+      and out of scope for the current phase — disabled pending an owner-chosen access path (bulk
+      ZIP vs. authenticated web service) and explicit approval to acquire.
 
   - source_id: melbourne_clue_business_context
     enabled: true

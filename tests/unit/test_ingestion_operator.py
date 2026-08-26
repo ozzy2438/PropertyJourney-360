@@ -1256,7 +1256,11 @@ def test_salesforce_extractor_maps_all_raw_assets(monkeypatch: pytest.MonkeyPatc
 
     monkeypatch.setattr(operator_module, "SalesforceConnector", FakeConnector)
     extractor = operator_module._salesforce_extractor(
-        SalesforceOAuthConfig(client_id="client", client_secret="secret")
+        SalesforceOAuthConfig(
+            client_id="client",
+            client_secret="secret",
+            auth_base_url="https://propertyjourney.my.salesforce.com",
+        )
     )
     mapped = extractor(_window())
     assert set(mapped) == {

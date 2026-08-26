@@ -1559,11 +1559,16 @@ def build_operator_from_environment() -> BatchIngestionOperator:
     sf_client_id = os.getenv("SALESFORCE_CLIENT_ID", "").strip()
     sf_client_secret = os.getenv("SALESFORCE_CLIENT_SECRET", "")
     if sf_client_id and sf_client_secret:
+        sf_login_url = os.getenv("SALESFORCE_LOGIN_URL", "").strip()
+        if not sf_login_url:
+            raise RuntimeError(
+                "SALESFORCE_LOGIN_URL must be the org's My Domain URL when Salesforce is enabled"
+            )
         extractors["salesforce"] = _salesforce_extractor(
             SalesforceOAuthConfig(
                 client_id=sf_client_id,
                 client_secret=sf_client_secret,
-                auth_base_url=os.getenv("SALESFORCE_LOGIN_URL", "https://login.salesforce.com"),
+                auth_base_url=sf_login_url,
                 api_version=os.getenv("SALESFORCE_API_VERSION", "65.0"),
             )
         )

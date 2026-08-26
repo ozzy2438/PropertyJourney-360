@@ -10,7 +10,7 @@ already-sanitized error messages and a small set of non-secret identity fields a
 Requires a `.env` (see `.env.example`) with:
     SALESFORCE_CLIENT_ID=...
     SALESFORCE_CLIENT_SECRET=...
-    SALESFORCE_LOGIN_URL=https://login.salesforce.com   # or the org's My Domain URL
+    SALESFORCE_LOGIN_URL=https://your-domain.my.salesforce.com
     SALESFORCE_API_VERSION=65.0
 
 Usage:
@@ -52,11 +52,8 @@ def main() -> None:
     oauth = SalesforceOAuthConfig(
         client_id=_require_env("SALESFORCE_CLIENT_ID"),
         client_secret=_require_env("SALESFORCE_CLIENT_SECRET"),
-        auth_base_url=os.environ.get(
-            "SALESFORCE_LOGIN_URL", "https://login.salesforce.com"
-        ).strip(),
+        auth_base_url=_require_env("SALESFORCE_LOGIN_URL"),
         api_version=os.environ.get("SALESFORCE_API_VERSION", "65.0").strip(),
-        scope="api",
     )
 
     result: dict[str, object] = {"client_credentials_flow": "not attempted"}

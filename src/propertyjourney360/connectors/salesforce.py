@@ -74,13 +74,13 @@ class SalesforceOAuthConfig:
     """OAuth client-credentials settings for an owner-configured Salesforce app.
 
     The External Client App or legacy Connected App must have the client credentials flow
-    enabled and an integration user selected by the Salesforce org owner. A My Domain login
-    URL is preferred, while ``https://login.salesforce.com`` also works where org policy allows.
+    enabled and an integration user selected by the Salesforce org owner. Salesforce requires the
+    org's My Domain URL for this flow; the generic login and test hosts are unsupported.
     """
 
     client_id: str
     client_secret: str = field(repr=False)
-    auth_base_url: str = "https://login.salesforce.com"
+    auth_base_url: str
     api_version: str = "v65.0"
     scope: str | None = None
 
@@ -94,6 +94,8 @@ class SalesforceOAuthConfig:
             raise ValueError("auth_base_url must be an absolute HTTPS URL")
         if parsed.username or parsed.password or parsed.query or parsed.fragment:
             raise ValueError("auth_base_url must not contain credentials, query or fragment")
+        if parsed.hostname in {"login.salesforce.com", "test.salesforce.com"}:
+            raise ValueError("client credentials flow requires the org's My Domain URL")
         if not _API_VERSION_RE.fullmatch(self.api_version):
             raise ValueError("api_version must look like v65.0")
         normalized_version = self.api_version

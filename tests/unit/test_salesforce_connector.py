@@ -29,6 +29,20 @@ def _oauth_config() -> SalesforceOAuthConfig:
     )
 
 
+@pytest.mark.parametrize(
+    "auth_base_url", ["https://login.salesforce.com", "https://test.salesforce.com"]
+)
+def test_client_credentials_rejects_generic_salesforce_login_hosts(
+    auth_base_url: str,
+) -> None:
+    with pytest.raises(ValueError, match="My Domain"):
+        SalesforceOAuthConfig(
+            client_id="external-client-app-id",
+            client_secret=CLIENT_SECRET,
+            auth_base_url=auth_base_url,
+        )
+
+
 def _token_response() -> httpx.Response:
     return httpx.Response(
         200,

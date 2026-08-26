@@ -1557,13 +1557,15 @@ def build_operator_from_environment() -> BatchIngestionOperator:
             extractors[source] = _postgres_extractor(dsn, source)
 
     sf_client_id = os.getenv("SALESFORCE_CLIENT_ID", "").strip()
-    sf_client_secret = os.getenv("SALESFORCE_CLIENT_SECRET", "")
-    if sf_client_id and sf_client_secret:
-        sf_login_url = os.getenv("SALESFORCE_LOGIN_URL", "").strip()
-        if not sf_login_url:
-            raise RuntimeError(
-                "SALESFORCE_LOGIN_URL must be the org's My Domain URL when Salesforce is enabled"
-            )
+    sf_client_secret = os.getenv("SALESFORCE_CLIENT_SECRET", "").strip()
+    sf_login_url = os.getenv("SALESFORCE_LOGIN_URL", "").strip()
+    sf_settings = (sf_client_id, sf_client_secret, sf_login_url)
+    if any(sf_settings) and not all(sf_settings):
+        raise RuntimeError(
+            "SALESFORCE_CLIENT_ID, SALESFORCE_CLIENT_SECRET and SALESFORCE_LOGIN_URL "
+            "must be configured together"
+        )
+    if all(sf_settings):
         extractors["salesforce"] = _salesforce_extractor(
             SalesforceOAuthConfig(
                 client_id=sf_client_id,

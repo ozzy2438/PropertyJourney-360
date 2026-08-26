@@ -30,12 +30,21 @@ def _oauth_config() -> SalesforceOAuthConfig:
 
 
 @pytest.mark.parametrize(
-    "auth_base_url", ["https://login.salesforce.com", "https://test.salesforce.com"]
+    "auth_base_url",
+    [
+        "https://login.salesforce.com",
+        "https://test.salesforce.com",
+        "https://login.salesforce.com.",
+        "https://evil.example",
+        "https://propertyjourney.my.salesforce.com.evil.example",
+        "https://propertyjourney.my.salesforce.com:444",
+        "https://propertyjourney.my.salesforce.com/oauth",
+    ],
 )
 def test_client_credentials_rejects_generic_salesforce_login_hosts(
     auth_base_url: str,
 ) -> None:
-    with pytest.raises(ValueError, match="My Domain"):
+    with pytest.raises(ValueError, match=r"\*\.my\.salesforce\.com"):
         SalesforceOAuthConfig(
             client_id="external-client-app-id",
             client_secret=CLIENT_SECRET,

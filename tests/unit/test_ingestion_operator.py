@@ -244,6 +244,37 @@ def test_cloud_operator_builders_fail_closed_without_purpose_specific_account(
         builder()
 
 
+@pytest.mark.parametrize(
+    "configured_environment",
+    [
+        {"SALESFORCE_CLIENT_ID": "client"},
+        {"SALESFORCE_CLIENT_SECRET": "secret"},
+        {"SALESFORCE_LOGIN_URL": "https://propertyjourney.my.salesforce.com"},
+        {
+            "SALESFORCE_CLIENT_ID": "client",
+            "SALESFORCE_CLIENT_SECRET": "secret",
+        },
+    ],
+)
+def test_batch_operator_fails_closed_for_partial_salesforce_configuration(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+    configured_environment: dict[str, str],
+) -> None:
+    for variable in (
+        "SALESFORCE_CLIENT_ID",
+        "SALESFORCE_CLIENT_SECRET",
+        "SALESFORCE_LOGIN_URL",
+    ):
+        monkeypatch.delenv(variable, raising=False)
+    monkeypatch.setenv("PJ360_INGEST_STATE_DIR", str(tmp_path / "state"))
+    for variable, value in configured_environment.items():
+        monkeypatch.setenv(variable, value)
+
+    with pytest.raises(RuntimeError, match="must be configured together"):
+        operator_module.build_operator_from_environment()
+
+
 def test_batch_operator_extract_load_and_commit_are_replay_safe(tmp_path: Path) -> None:
     state = OperatorState(tmp_path / "state")
     loader = FakeBigQueryLoader()

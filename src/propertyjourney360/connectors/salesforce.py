@@ -94,8 +94,17 @@ class SalesforceOAuthConfig:
             raise ValueError("auth_base_url must be an absolute HTTPS URL")
         if parsed.username or parsed.password or parsed.query or parsed.fragment:
             raise ValueError("auth_base_url must not contain credentials, query or fragment")
-        if parsed.hostname in {"login.salesforce.com", "test.salesforce.com"}:
-            raise ValueError("client credentials flow requires the org's My Domain URL")
+        hostname = parsed.hostname.lower()
+        if (
+            hostname.endswith(".")
+            or hostname == "my.salesforce.com"
+            or not hostname.endswith(".my.salesforce.com")
+            or parsed.port not in {None, 443}
+            or parsed.path not in {"", "/"}
+        ):
+            raise ValueError(
+                "client credentials flow requires an origin-only *.my.salesforce.com URL"
+            )
         if not _API_VERSION_RE.fullmatch(self.api_version):
             raise ValueError("api_version must look like v65.0")
         normalized_version = self.api_version

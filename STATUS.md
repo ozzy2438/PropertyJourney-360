@@ -10,7 +10,7 @@ is not represented as a live production deployment.
 
 ## Locally verified
 
-- 176 tests pass; branch coverage is 86.09% against an 85% gate.
+- 189 tests pass; branch coverage is 86.19% against an 85% gate.
 - Ruff lint/format and strict mypy pass across 40 source files.
 - The Python reference identity resolver meets the held-out synthetic targets: 100% cluster
   precision, 98.1555% recall, zero false-positive merges. The documented dbt subset remains
@@ -33,7 +33,7 @@ is not represented as a live production deployment.
   does not verify datasets, dbt models, deployed infrastructure, billing configuration or cost.
 - Salesforce Developer Edition Client Credentials Flow was owner-authorised and verified against
   the org's My Domain. The configured Run As User resolved as active and an authenticated
-  `User/describe` REST call succeeded with the `api` scope. Tokens, credentials and raw user
+  `User/describe` REST call confirmed usable REST API access. Tokens, credentials and raw user
   identifiers are not persisted in repository evidence. Synthetic seeding and incremental
   extraction remain unexecuted.
 - Production API image builds with its cloud BigQuery dependencies; locked audit and Gitleaks pass.
@@ -52,8 +52,8 @@ Machine-readable reports live in [`evidence/`](evidence/).
 
 ## Owner gates remaining
 
-1. Seed synthetic Salesforce contacts/cases and execute a bounded frozen-window extraction using
-   the verified Developer Edition OAuth connection.
+1. Rotate the owner-exposed Salesforce consumer secret outside Git, re-run the bounded connection
+   smoke test, then seed synthetic contacts/cases and execute a frozen-window extraction.
 2. Select the GCP project/billing controls, bootstrap WIF, review a saved Terraform plan and apply.
 3. Load bounded sources, execute `dbt build`/tests/replay in BigQuery and inspect exact job/run IDs.
 4. Deploy the API by immutable image digest, verify private invocation and capture cost/bytes.

@@ -31,6 +31,11 @@ is not represented as a live production deployment.
   `propertyjourney-360` in `australia-southeast1` with a guarded literal `SELECT 1`:
   `total_bytes_processed=0`. This verifies authentication and zero-byte query execution only; it
   does not verify datasets, dbt models, deployed infrastructure, billing configuration or cost.
+- Salesforce Developer Edition Client Credentials Flow was owner-authorised and verified against
+  the org's My Domain. The configured Run As User resolved as active and an authenticated
+  `User/describe` REST call succeeded with the `api` scope. Tokens, credentials and raw user
+  identifiers are not persisted in repository evidence. Synthetic seeding and incremental
+  extraction remain unexecuted.
 - Production API image builds with its cloud BigQuery dependencies; locked audit and Gitleaks pass.
 
 Machine-readable reports live in [`evidence/`](evidence/).
@@ -47,8 +52,8 @@ Machine-readable reports live in [`evidence/`](evidence/).
 
 ## Owner gates remaining
 
-1. Create/approve Salesforce Developer Edition OAuth credentials outside Git, seed synthetic
-   contacts/cases and execute a bounded frozen-window extraction.
+1. Seed synthetic Salesforce contacts/cases and execute a bounded frozen-window extraction using
+   the verified Developer Edition OAuth connection.
 2. Select the GCP project/billing controls, bootstrap WIF, review a saved Terraform plan and apply.
 3. Load bounded sources, execute `dbt build`/tests/replay in BigQuery and inspect exact job/run IDs.
 4. Deploy the API by immutable image digest, verify private invocation and capture cost/bytes.

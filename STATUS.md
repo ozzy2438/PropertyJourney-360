@@ -1,6 +1,6 @@
 # PropertyJourney 360 status
 
-Last updated: 2026-08-25 (Australia/Melbourne)
+Last updated: 2026-08-26 (Australia/Melbourne)
 
 ## Current verdict
 
@@ -27,6 +27,10 @@ is not represented as a live production deployment.
 - The packaged Airflow operator extracted and immutably landed 125 real local PostgreSQL rows for a
   frozen window; its dbt 1.12.3 CLI parsed the mounted project from writable run directories.
 - dbt parses 36 models without credentials; Terraform 1.15.9 validates with Google provider 7.45.0.
+- BigQuery Sandbox ADC connectivity was owner-authorised and verified against project
+  `propertyjourney-360` in `australia-southeast1` with a guarded literal `SELECT 1`:
+  `total_bytes_processed=0`. This verifies authentication and zero-byte query execution only; it
+  does not verify datasets, dbt models, deployed infrastructure, billing configuration or cost.
 - Production API image builds with its cloud BigQuery dependencies; locked audit and Gitleaks pass.
 
 Machine-readable reports live in [`evidence/`](evidence/).

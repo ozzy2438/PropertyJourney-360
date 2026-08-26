@@ -1,0 +1,145 @@
+name: Owner-gated Terraform
+
+on:
+  workflow_dispatch:
+    inputs:
+      operation:
+        description: Generate a plan or apply the reviewed plan
+        required: true
+        type: choice
+        options: [plan, apply]
+        default: plan
+      confirm_apply:
+        description: Type APPLY for an apply; ignored for plan
+        required: false
+        type: string
+      plan_run_id:
+        description: Successful plan workflow run ID; required for apply
+        required: false
+        type: string
+      deploy_api:
+        description: Manage the private Cloud Run API in this run
+        required: true
+        type: boolean
+        default: false
+      api_image:
+        description: Immutable Artifact Registry image@sha256 when deploy_api is true
+        required: false
+        type: string
+
+permissions:
+  actions: read
+  contents: read
+  id-token: write
+
+concurrency:
+  group: terraform-production
+  cancel-in-progress: false
+
+jobs:
+  terraform:
+    name: Terraform ${{ inputs.operation }}
+    if: >-
+      ${{ inputs.operation == 'plan' ||
+          (inputs.operation == 'apply' && inputs.confirm_apply == 'APPLY' &&
+           inputs.plan_run_id != '' && github.actor == github.repository_owner) }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    environment:
+      name: production
+    env:
+      TF_IN_AUTOMATION: "true"
+      TF_INPUT: "false"
+      TF_VAR_project_id: ${{ vars.GCP_PROJECT_ID }}
+      TF_VAR_region: ${{ vars.GCP_REGION || 'australia-southeast1' }}
+      TF_VAR_bigquery_location: ${{ vars.BIGQUERY_LOCATION || 'australia-southeast1' }}
+      TF_VAR_environment: ${{ vars.DEPLOY_ENVIRONMENT || 'dev' }}
+      TF_VAR_deploy_api: ${{ inputs.deploy_api }}
+      TF_VAR_api_image: ${{ inputs.api_image }}
+    defaults:
+      run:
+        working-directory: infra/terraform
+    steps:
+      - name: Require main and explicit owner confirmation
+        env:
+          OPERATION: ${{ inputs.operation }}
+          CONFIRM_APPLY: ${{ inputs.confirm_apply }}
+          PLAN_RUN_ID: ${{ inputs.plan_run_id }}
+        run: |
+          test "${GITHUB_REF}" = "refs/heads/main"
+          if test "${OPERATION}" = "apply"; then
+            test "${GITHUB_ACTOR}" = "${GITHUB_REPOSITORY_OWNER}"
+            test "${CONFIRM_APPLY}" = "APPLY"
+            test -n "${PLAN_RUN_ID}"
+          fi
+
+      - name: Verify successful main-branch plan run
+        if: ${{ inputs.operation == 'apply' }}
+        id: plan_metadata
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PLAN_RUN_ID: ${{ inputs.plan_run_id }}
+        run: |
+          test "$(gh api "repos/${GITHUB_REPOSITORY}/actions/runs/${PLAN_RUN_ID}" --jq '.conclusion')" = "success"
+          test "$(gh api "repos/${GITHUB_REPOSITORY}/actions/runs/${PLAN_RUN_ID}" --jq '.head_branch')" = "main"
+          test "$(gh api "repos/${GITHUB_REPOSITORY}/actions/runs/${PLAN_RUN_ID}" --jq '.path')" = ".github/workflows/terraform.yml"
+          head_sha="$(gh api "repos/${GITHUB_REPOSITORY}/actions/runs/${PLAN_RUN_ID}" --jq '.head_sha')"
+          test -n "${head_sha}"
+          echo "head_sha=${head_sha}" >> "${GITHUB_OUTPUT}"
+
+      - name: Check out repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: ${{ steps.plan_metadata.outputs.head_sha || github.sha }}
+
+      - name: Download the exact reviewed plan
+        if: ${{ inputs.operation == 'apply' }}
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          name: terraform-plan-${{ inputs.plan_run_id }}
+          path: infra/terraform
+          github-token: ${{ github.token }}
+          run-id: ${{ inputs.plan_run_id }}
+
+      - name: Authenticate with short-lived Google credentials
+        uses: google-github-actions/auth@7c6bc770dae815cd3e89ee6cdf493a5fab2cc093
+        with:
+          workload_identity_provider: ${{ vars.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+          service_account: ${{ vars.GCP_TERRAFORM_SERVICE_ACCOUNT }}
+
+      - name: Set up Terraform
+        uses: hashicorp/setup-terraform@dfe3c3f87815947d99a8997f908cb6525fc44e9e
+        with:
+          terraform_version: 1.15.9
+          terraform_wrapper: false
+
+      - name: Initialise protected remote state
+        run: >-
+          terraform init
+          -input=false
+          -lockfile=readonly
+          -backend-config=bucket=${{ vars.TF_STATE_BUCKET }}
+          -backend-config=prefix=${{ vars.TF_STATE_PREFIX }}
+
+      - name: Create saved plan
+        if: ${{ inputs.operation == 'plan' }}
+        run: terraform plan -input=false -lock-timeout=5m -out=tfplan
+
+      - name: Render reviewable plan
+        if: ${{ inputs.operation == 'plan' }}
+        run: terraform show -no-color tfplan > tfplan.txt
+
+      - name: Apply only the saved plan
+        if: ${{ inputs.operation == 'apply' }}
+        run: terraform apply -input=false -lock-timeout=5m -auto-approve tfplan
+
+      - name: Upload plan for owner review
+        if: ${{ inputs.operation == 'plan' }}
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: terraform-plan-${{ github.run_id }}
+          path: |
+            infra/terraform/tfplan
+            infra/terraform/tfplan.txt
+          if-no-files-found: error
+          retention-days: 7

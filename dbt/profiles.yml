@@ -1,0 +1,15 @@
+propertyjourney_360:
+  target: dev
+  outputs:
+    dev:
+      type: bigquery
+      method: oauth
+      project: "{{ env_var('DBT_BIGQUERY_PROJECT') }}"
+      dataset: "{{ env_var('DBT_BIGQUERY_DATASET', 'propertyjourney_dev') }}"
+      location: "{{ env_var('DBT_BIGQUERY_LOCATION', 'australia-southeast1') }}"
+      threads: 4
+      priority: interactive
+      maximum_bytes_billed: 10000000000
+      job_execution_timeout_seconds: 600
+      job_retries: 1
+      impersonate_service_account: "{{ env_var('DBT_BIGQUERY_IMPERSONATE_SERVICE_ACCOUNT', '') }}"

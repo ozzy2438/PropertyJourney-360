@@ -1,0 +1,148 @@
+{
+  "$defs": {
+    "EvidenceLevel": {
+      "enum": [
+        "DESIGNED",
+        "IMPLEMENTED",
+        "LOCALLY_VERIFIED",
+        "CLOUD_VERIFIED",
+        "SUSTAINED"
+      ],
+      "title": "EvidenceLevel",
+      "type": "string"
+    },
+    "PublicSourceObservation": {
+      "additionalProperties": false,
+      "properties": {
+        "attribution_text": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Attribution Text"
+        },
+        "byte_count": {
+          "minimum": 0,
+          "title": "Byte Count",
+          "type": "integer"
+        },
+        "licence_name": {
+          "title": "Licence Name",
+          "type": "string"
+        },
+        "licence_url": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Licence Url"
+        },
+        "limitations": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Limitations",
+          "type": "array"
+        },
+        "publisher": {
+          "title": "Publisher",
+          "type": "string"
+        },
+        "response_record_count": {
+          "anyOf": [
+            {
+              "minimum": 0,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Response Record Count"
+        },
+        "retrieved_at": {
+          "format": "date-time",
+          "title": "Retrieved At",
+          "type": "string"
+        },
+        "sha256": {
+          "pattern": "^[a-f0-9]{64}$",
+          "title": "Sha256",
+          "type": "string"
+        },
+        "source_id": {
+          "title": "Source Id",
+          "type": "string"
+        }
+      },
+      "required": [
+        "source_id",
+        "publisher",
+        "retrieved_at",
+        "byte_count",
+        "sha256",
+        "licence_name",
+        "licence_url",
+        "attribution_text",
+        "limitations"
+      ],
+      "title": "PublicSourceObservation",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "catalog_sha256": {
+      "pattern": "^[a-f0-9]{64}$",
+      "title": "Catalog Sha256",
+      "type": "string"
+    },
+    "catalog_terms_checked_at": {
+      "title": "Catalog Terms Checked At",
+      "type": "string"
+    },
+    "evidence_level": {
+      "$ref": "#/$defs/EvidenceLevel"
+    },
+    "generated_at": {
+      "format": "date-time",
+      "title": "Generated At",
+      "type": "string"
+    },
+    "observations": {
+      "items": {
+        "$ref": "#/$defs/PublicSourceObservation"
+      },
+      "title": "Observations",
+      "type": "array"
+    },
+    "report_version": {
+      "default": 1,
+      "title": "Report Version",
+      "type": "integer"
+    },
+    "scope_limitation": {
+      "title": "Scope Limitation",
+      "type": "string"
+    }
+  },
+  "required": [
+    "generated_at",
+    "catalog_sha256",
+    "catalog_terms_checked_at",
+    "observations",
+    "evidence_level",
+    "scope_limitation"
+  ],
+  "title": "PublicSourceEvidenceReport",
+  "type": "object"
+}

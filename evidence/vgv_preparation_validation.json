@@ -1,0 +1,63 @@
+{
+  "report_version": 1,
+  "release_id": "vgv-annual-2025",
+  "generated_at": "2026-08-25T08:02:39.021761Z",
+  "acquisition_method": "owner_supplied_browser_download",
+  "observations": [
+    {
+      "property_type": "HOUSE",
+      "filename": "houses-by-suburb-2015-2025.xlsx",
+      "official_url": "https://www.land.vic.gov.au/__data/assets/excel_doc/0033/775617/houses-by-suburb-2015-2025.xlsx",
+      "byte_count": 137891,
+      "sha256": "b6220620f5ac4a586625d0d2adfbab4e82925531b34abfbefb67f926986e6249",
+      "raw_object_path": "vgv_property_sales_timeseries/property_type=house/retrieved_date=2026-08-25/b6220620f5ac4a586625d0d2adfbab4e82925531b34abfbefb67f926986e6249.xlsx",
+      "locality_count": 797,
+      "prepared_row_count": 8739,
+      "unavailable_price_count": 28,
+      "quality_marker_counts": {
+        "*": 11,
+        "NONE": 8277,
+        "^": 479
+      }
+    },
+    {
+      "property_type": "UNIT",
+      "filename": "units-by-suburb-2015-2025.xlsx",
+      "official_url": "https://www.land.vic.gov.au/__data/assets/excel_doc/0034/775618/units-by-suburb-2015-2025.xlsx",
+      "byte_count": 83164,
+      "sha256": "94bfff96f5845d3a811d0ac03fe638dae4c170a347d4b365b3652cc287b576ee",
+      "raw_object_path": "vgv_property_sales_timeseries/property_type=unit/retrieved_date=2026-08-25/94bfff96f5845d3a811d0ac03fe638dae4c170a347d4b365b3652cc287b576ee.xlsx",
+      "locality_count": 463,
+      "prepared_row_count": 5092,
+      "unavailable_price_count": 1,
+      "quality_marker_counts": {
+        "*": 2,
+        "NONE": 4691,
+        "^": 400
+      }
+    },
+    {
+      "property_type": "LAND",
+      "filename": "land-by-suburb-2015-2025.xlsx",
+      "official_url": "https://www.land.vic.gov.au/__data/assets/excel_doc/0035/775619/land-by-suburb-2015-2025.xlsx",
+      "byte_count": 46134,
+      "sha256": "0dccc5e1543812d239971ccc4d270a2e9d4ab9f1ae0ca0316e16055987273136",
+      "raw_object_path": "vgv_property_sales_timeseries/property_type=land/retrieved_date=2026-08-25/0dccc5e1543812d239971ccc4d270a2e9d4ab9f1ae0ca0316e16055987273136.xlsx",
+      "locality_count": 224,
+      "prepared_row_count": 2410,
+      "unavailable_price_count": 54,
+      "quality_marker_counts": {
+        "*": 16,
+        "NONE": 2089,
+        "^": 359
+      }
+    }
+  ],
+  "prepared_row_count": 16241,
+  "prepared_sha256": "bbc5443585b4d96d8984e8a78d0fff2a264c3f80f836e967145fff1675a2ed78",
+  "prepared_byte_count": 3956252,
+  "prepared_filename": "raw_property_market.jsonl",
+  "source_payload_sha256": "6cc28ceb4b432722f6490cd0c3090fdfd01c1e788698a907270a0e6d50b678c3",
+  "source_payload_object": "[{\"object_path\":\"vgv_property_sales_timeseries/property_type=house/retrieved_date=2026-08-25/b6220620f5ac4a586625d0d2adfbab4e82925531b34abfbefb67f926986e6249.xlsx\",\"sha256\":\"b6220620f5ac4a586625d0d2adfbab4e82925531b34abfbefb67f926986e6249\"},{\"object_path\":\"vgv_property_sales_timeseries/property_type=unit/retrieved_date=2026-08-25/94bfff96f5845d3a811d0ac03fe638dae4c170a347d4b365b3652cc287b576ee.xlsx\",\"sha256\":\"94bfff96f5845d3a811d0ac03fe638dae4c170a347d4b365b3652cc287b576ee\"},{\"object_path\":\"vgv_property_sales_timeseries/property_type=land/retrieved_date=2026-08-25/0dccc5e1543812d239971ccc4d270a2e9d4ab9f1ae0ca0316e16055987273136.xlsx\",\"sha256\":\"0dccc5e1543812d239971ccc4d270a2e9d4ab9f1ae0ca0316e16055987273136\"}]",
+  "limitation": "Annual suburb medians for 2015-2025 only. The workbook does not provide sales volumes, so sales_volume remains null. Preliminary 2026 values are deliberately excluded. Source quality markers are preserved without inferring their meaning. The owner downloaded the workbooks in a browser; HTTP status and response headers were not independently captured by the pipeline."
+}

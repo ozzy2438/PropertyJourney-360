@@ -1,0 +1,28 @@
+ruleset_version: identity-v1.1.0
+objective: precision_first
+thresholds:
+  automatic: 0.94
+  review: 0.70
+  minimum_automatic_coverage: 0.70
+weights:
+  email: 0.35
+  phone: 0.30
+  name: 0.20
+  address: 0.10
+  postcode: 0.05
+deterministic_rules:
+  - both_verified_email_exact
+  - exact_email_and_strong_name_with_verified_source_preferred
+  - normalized_phone_and_near_exact_name_and_postcode
+  - normalized_phone_and_strong_name
+python_reference_only_rules:
+  - trusted_cross_system_identifier_exact
+hard_conflicts:
+  - conflicting_verified_email
+python_reference_only_conflicts:
+  - conflicting_trusted_identifier_across_cluster
+outcomes:
+  - AUTO_MATCH
+  - REVIEW_REQUIRED
+  - NO_MATCH
+ground_truth_available_to_matcher: false

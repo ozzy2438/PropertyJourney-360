@@ -1,0 +1,84 @@
+[build-system]
+requires = ["hatchling>=1.27,<2"]
+build-backend = "hatchling.build"
+
+[project]
+name = "propertyjourney360"
+version = "0.1.0"
+description = "Auditable Australian property and synthetic Customer 360 data platform"
+readme = "README.md"
+requires-python = ">=3.12,<3.14"
+license = { text = "MIT" }
+authors = [{ name = "PropertyJourney 360 contributors" }]
+dependencies = [
+  "defusedxml>=0.7.1,<1",
+  "fastapi>=0.116,<1",
+  "httpx>=0.28,<1",
+  "pydantic>=2.11,<3",
+  "pydantic-settings>=2.10,<3",
+  "pyyaml>=6.0.2,<7",
+  "structlog>=25.4,<27",
+  "tenacity>=9.1,<10",
+  "uvicorn[standard]>=0.35,<1",
+]
+
+[project.optional-dependencies]
+cloud = [
+  "google-cloud-bigquery>=3.35,<4",
+  "google-cloud-pubsub>=2.31,<3",
+  "google-cloud-secret-manager>=2.24,<3",
+  "google-cloud-storage>=3.2,<4",
+]
+postgres = [
+  "psycopg[binary]>=3.2,<4",
+]
+dev = [
+  "mypy>=1.17,<2",
+  "pip-audit>=2.9,<3",
+  "pytest>=9.0.3,<10",
+  "pytest-cov>=6.2,<7",
+  "pytest-httpx>=0.35,<1",
+  "ruff>=0.12,<1",
+  "types-defusedxml>=0.7.0.20240218,<1",
+  "types-PyYAML>=6.0.12,<7",
+]
+
+[project.scripts]
+pj360 = "propertyjourney360.cli:main"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/propertyjourney360"]
+
+[tool.pytest.ini_options]
+addopts = "-ra --strict-config --strict-markers"
+testpaths = ["tests", "airflow/tests"]
+markers = [
+  "integration: tests requiring local services",
+  "cloud: tests requiring explicitly configured cloud credentials",
+]
+
+[tool.coverage.run]
+branch = true
+source = ["propertyjourney360"]
+
+[tool.coverage.report]
+fail_under = 85
+show_missing = true
+skip_covered = true
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP", "SIM", "RUF", "S", "C4", "DTZ", "PT"]
+ignore = ["S101"]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**/*.py" = ["S101", "S105", "S106"]
+
+[tool.mypy]
+python_version = "3.12"
+strict = true
+warn_unreachable = true
+plugins = ["pydantic.mypy"]

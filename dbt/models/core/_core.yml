@@ -1,0 +1,211 @@
+version: 2
+
+models:
+  - name: dim_customer
+    description: Current canonical synthetic customer profile, resolved only from eligible source identities.
+    config: {contract: {enforced: true}}
+    columns:
+      - {name: customer_id, data_type: string, data_tests: [not_null, unique]}
+      - {name: first_name, data_type: string}
+      - {name: last_name, data_type: string}
+      - {name: full_name, data_type: string}
+      - {name: email, data_type: string}
+      - {name: phone, data_type: string}
+      - {name: address_line_1, data_type: string}
+      - {name: suburb, data_type: string}
+      - {name: state, data_type: string}
+      - {name: postcode, data_type: string}
+      - {name: source_systems, data_type: "array<string>"}
+      - {name: identity_source_count, data_type: int64, data_tests: [not_null]}
+      - {name: first_observed_at, data_type: timestamp, data_tests: [not_null]}
+      - {name: record_updated_at, data_type: timestamp, data_tests: [not_null]}
+      - {name: profile_hash, data_type: string, data_tests: [not_null]}
+
+  - name: dim_customer_history
+    description: SCD Type 2 customer profile history; incremental MERGE closes and inserts changed versions atomically.
+    config: {contract: {enforced: true}}
+    columns:
+      - {name: customer_history_sk, data_type: string, data_tests: [not_null, unique]}
+      - name: customer_id
+        data_type: string
+        data_tests: [not_null]
+      - {name: first_name, data_type: string}
+      - {name: last_name, data_type: string}
+      - {name: full_name, data_type: string}
+      - {name: email, data_type: string}
+      - {name: phone, data_type: string}
+      - {name: address_line_1, data_type: string}
+      - {name: suburb, data_type: string}
+      - {name: state, data_type: string}
+      - {name: postcode, data_type: string}
+      - {name: source_systems, data_type: "array<string>"}
+      - {name: identity_source_count, data_type: int64}
+      - {name: valid_from, data_type: timestamp, data_tests: [not_null]}
+      - {name: valid_to, data_type: timestamp}
+      - {name: is_current, data_type: bool, data_tests: [not_null]}
+      - {name: profile_hash, data_type: string, data_tests: [not_null]}
+      - {name: source_record_updated_at, data_type: timestamp, data_tests: [not_null]}
+      - {name: dbt_updated_at, data_type: timestamp, data_tests: [not_null]}
+
+  - name: dim_account
+    description: Salesforce business accounts; ABNs originate from public business data where licensed.
+    config: {contract: {enforced: true}}
+    columns:
+      - {name: account_id, data_type: string, data_tests: [not_null, unique]}
+      - {name: source_system, data_type: string, data_tests: [not_null]}
+      - {name: account_source_id, data_type: string, data_tests: [not_null, unique]}
+      - {name: account_name, data_type: string}
+      - {name: abn, data_type: string}
+      - {name: industry, data_type: string}
+      - {name: billing_street, data_type: string}
+      - {name: billing_suburb, data_type: string}
+      - {name: billing_state, data_type: string}
+      - {name: billing_postcode, data_type: string}
+      - {name: source_updated_at, data_type: timestamp, data_tests: [not_null]}
+      - {name: lineage_ingestion_key, data_type: string, data_tests: [not_null]}
+
+  - name: dim_property
+    description: Licensed Victorian property/address dimension retaining official source lineage.
+    config: {contract: {enforced: true}}
+    columns:
+      - {name: property_id, data_type: string, data_tests: [not_null, unique]}
+      - {name: source_system, data_type: string, data_tests: [not_null]}
+      - {name: property_source_id, data_type: string, data_tests: [not_null, unique]}
+      - {name: address_id, data_type: string}
+      - {name: address_line_1, data_type: string}
+      - {name: suburb, data_type: string}
+      - {name: state, data_type: string}
+      - {name: postcode, data_type: string}
+      - {name: property_type, data_type: string}
+      - {name: latitude, data_type: float64}
+      - {name: longitude, data_type: float64}
+      - {name: property_geography, data_type: geography}
+      - {name: source_dataset, data_type: string}
+      - {name: source_updated_at, data_type: timestamp, data_tests: [not_null]}
+      - {name: source_retrieved_at, data_type: timestamp, data_tests: [not_null]}
+      - {name: source_payload_sha256, data_type: string, data_tests: [not_null]}
+      - {name: source_payload_object, data_type: string, data_tests: [not_null]}
+      - {name: lineage_ingestion_key, data_type: string, data_tests: [not_null]}
+
+  - name: bridge_customer_source_identity
+    description: Auditable mapping from every accepted source identity to one canonical customer.
+    config: {contract: {enforced: true}}
+    columns:
+      - name: customer_id
+        data_type: string
+        data_tests:
+          - not_null
+          - relationships:
+              arguments: {to: "ref('dim_customer')", field: customer_id}
+      - {name: source_identity_key, data_type: string, data_tests: [not_null, unique]}
+      - {name: source_system, data_type: string, data_tests: [not_null]}
+      - {name: source_record_id, data_type: string, data_tests: [not_null]}
+      - {name: source_updated_at, data_type: timestamp, data_tests: [not_null]}
+      - {name: lineage_ingestion_key, data_type: string, data_tests: [not_null]}
+      - name: resolution_decision
+        data_type: string
+        data_tests:
+          - accepted_values:
+              arguments: {values: ['AUTO_MATCH', 'REVIEW_REQUIRED', 'NO_MATCH']}
+      - {name: highest_match_score, data_type: float64, data_tests: [not_null]}
+      - {name: rule_version, data_type: string, data_tests: [not_null]}
+
+  - name: bridge_customer_account
+    description: Deduplicated customer-to-business-account relationships retained from source records.
+    config: {contract: {enforced: true}}
+    data_tests:
+      - unique:
+          arguments: {column_name: "concat(customer_id, '||', account_id)"}
+    columns:
+      - name: customer_id
+        data_type: string
+        data_tests:
+          - not_null
+          - relationships:
+              arguments: {to: "ref('dim_customer')", field: customer_id}
+      - name: account_id
+        data_type: string
+        data_tests:
+          - not_null
+          - relationships:
+              arguments: {to: "ref('dim_account')", field: account_id}
+      - {name: relationship_source_system, data_type: string}
+      - {name: relationship_source_record_id, data_type: string}
+      - {name: relationship_updated_at, data_type: timestamp}
+
+  - name: fact_customer_property_interaction
+    description: Idempotent, late-arrival-aware behavioural events with identity-attribution evidence.
+    config: {contract: {enforced: true}}
+    columns:
+      - {name: interaction_id, data_type: string, data_tests: [not_null, unique]}
+      - name: customer_id
+        data_type: string
+      - name: property_id
+        data_type: string
+      - name: event_type
+        data_type: string
+        data_tests:
+          - accepted_values:
+              arguments: {values: ['VIEW', 'SAVE', 'ENQUIRY', 'SEARCH', 'IDENTIFY']}
+      - {name: session_id, data_type: string}
+      - {name: anonymous_id, data_type: string}
+      - name: attribution_method
+        data_type: string
+        data_tests:
+          - accepted_values:
+              arguments: {values: ['DIRECT_CUSTOMER_ID', 'DIRECT_SOURCE_ID', 'ANONYMOUS_IDENTIFY_LINK', 'AMBIGUOUS_ANONYMOUS_ID', 'UNATTRIBUTED']}
+      - {name: customer_source_system, data_type: string}
+      - {name: customer_source_id, data_type: string}
+      - {name: price_observed, data_type: numeric}
+      - {name: schema_version, data_type: int64}
+      - {name: occurred_at, data_type: timestamp, data_tests: [not_null]}
+      - {name: event_date, data_type: date, data_tests: [not_null]}
+      - {name: ingested_at, data_type: timestamp, data_tests: [not_null]}
+      - {name: lineage_ingestion_key, data_type: string, data_tests: [not_null]}
+
+  - name: fact_support_case
+    description: Current support-case facts from Salesforce and the support API.
+    config: {contract: {enforced: true}}
+    columns:
+      - {name: support_case_id, data_type: string, data_tests: [not_null, unique]}
+      - {name: source_system, data_type: string, data_tests: [not_null]}
+      - {name: case_source_id, data_type: string, data_tests: [not_null]}
+      - name: customer_id
+        data_type: string
+      - name: account_id
+        data_type: string
+      - {name: case_status, data_type: string}
+      - {name: priority, data_type: string}
+      - {name: subject, data_type: string}
+      - {name: opened_at, data_type: timestamp, data_tests: [not_null]}
+      - {name: opened_date, data_type: date, data_tests: [not_null]}
+      - {name: closed_at, data_type: timestamp}
+      - {name: source_updated_at, data_type: timestamp, data_tests: [not_null]}
+      - {name: lineage_ingestion_key, data_type: string, data_tests: [not_null]}
+
+  - name: fact_consent_change
+    description: Append-oriented channel consent changes linked to a canonical customer.
+    config: {contract: {enforced: true}}
+    columns:
+      - {name: consent_change_id, data_type: string, data_tests: [not_null, unique]}
+      - name: customer_id
+        data_type: string
+        data_tests: [not_null]
+      - name: channel
+        data_type: string
+        data_tests:
+          - accepted_values:
+              arguments: {values: ['EMAIL', 'SMS', 'PUSH']}
+      - name: consent_status
+        data_type: string
+        data_tests:
+          - accepted_values:
+              arguments: {values: ['GRANTED', 'REVOKED']}
+      - {name: policy_version, data_type: string}
+      - {name: capture_source, data_type: string}
+      - {name: customer_source_system, data_type: string}
+      - {name: customer_source_id, data_type: string}
+      - {name: occurred_at, data_type: timestamp, data_tests: [not_null]}
+      - {name: occurred_date, data_type: date, data_tests: [not_null]}
+      - {name: ingested_at, data_type: timestamp, data_tests: [not_null]}
+      - {name: lineage_ingestion_key, data_type: string, data_tests: [not_null]}

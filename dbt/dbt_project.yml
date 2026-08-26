@@ -1,0 +1,49 @@
+name: propertyjourney_360
+version: "1.0.0"
+config-version: 2
+
+profile: propertyjourney_360
+
+model-paths: ["models"]
+macro-paths: ["macros"]
+seed-paths: ["seeds"]
+test-paths: ["tests"]
+analysis-paths: ["analyses"]
+target-path: "target"
+clean-targets: ["target", "dbt_packages", "logs"]
+
+require-dbt-version: [">=1.10.0", "<2.0.0"]
+
+vars:
+  identity_rule_version: "identity-v1.1.0"
+  identity_auto_match_threshold: 0.94
+  identity_review_threshold: 0.70
+  identity_minimum_automatic_coverage: 0.70
+  event_lookback_days: 3
+  anonymous_link_window_hours: 24
+
+models:
+  propertyjourney_360:
+    +persist_docs:
+      relation: true
+      columns: true
+    staging:
+      +schema: staging
+      +materialized: view
+      +tags: ["staging"]
+    intermediate:
+      +schema: staging
+      +materialized: table
+      +tags: ["identity"]
+    core:
+      +schema: core
+      +materialized: table
+      +tags: ["core"]
+    marts:
+      +schema: marts
+      +materialized: table
+      +tags: ["marts"]
+    governance:
+      +schema: governance
+      +materialized: table
+      +tags: ["governance"]

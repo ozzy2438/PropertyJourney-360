@@ -1,0 +1,190 @@
+{
+  "$defs": {
+    "CheckResult": {
+      "additionalProperties": false,
+      "properties": {
+        "command": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Command",
+          "type": "array"
+        },
+        "duration_seconds": {
+          "minimum": 0,
+          "title": "Duration Seconds",
+          "type": "number"
+        },
+        "exit_code": {
+          "title": "Exit Code",
+          "type": "integer"
+        },
+        "name": {
+          "title": "Name",
+          "type": "string"
+        },
+        "output_sha256": {
+          "pattern": "^[a-f0-9]{64}$",
+          "title": "Output Sha256",
+          "type": "string"
+        },
+        "output_tail": {
+          "title": "Output Tail",
+          "type": "string"
+        }
+      },
+      "required": [
+        "name",
+        "command",
+        "exit_code",
+        "duration_seconds",
+        "output_sha256",
+        "output_tail"
+      ],
+      "title": "CheckResult",
+      "type": "object"
+    },
+    "EvidenceClaim": {
+      "additionalProperties": false,
+      "properties": {
+        "actual": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "number"
+            },
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Actual"
+        },
+        "claim_id": {
+          "title": "Claim Id",
+          "type": "string"
+        },
+        "description": {
+          "title": "Description",
+          "type": "string"
+        },
+        "evidence_status": {
+          "title": "Evidence Status",
+          "type": "string"
+        },
+        "level": {
+          "$ref": "#/$defs/EvidenceLevel"
+        },
+        "limitation": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Limitation"
+        },
+        "target": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "number"
+            },
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Target"
+        }
+      },
+      "required": [
+        "claim_id",
+        "description",
+        "level",
+        "target",
+        "actual",
+        "evidence_status"
+      ],
+      "title": "EvidenceClaim",
+      "type": "object"
+    },
+    "EvidenceLevel": {
+      "enum": [
+        "DESIGNED",
+        "IMPLEMENTED",
+        "LOCALLY_VERIFIED",
+        "CLOUD_VERIFIED",
+        "SUSTAINED"
+      ],
+      "title": "EvidenceLevel",
+      "type": "string"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "checks": {
+      "items": {
+        "$ref": "#/$defs/CheckResult"
+      },
+      "title": "Checks",
+      "type": "array"
+    },
+    "claims": {
+      "items": {
+        "$ref": "#/$defs/EvidenceClaim"
+      },
+      "title": "Claims",
+      "type": "array"
+    },
+    "environment": {
+      "title": "Environment",
+      "type": "string"
+    },
+    "generated_at": {
+      "format": "date-time",
+      "title": "Generated At",
+      "type": "string"
+    },
+    "measurements": {
+      "additionalProperties": true,
+      "title": "Measurements",
+      "type": "object"
+    },
+    "python_version": {
+      "title": "Python Version",
+      "type": "string"
+    },
+    "report_version": {
+      "default": 1,
+      "title": "Report Version",
+      "type": "integer"
+    },
+    "source_tree_sha256": {
+      "pattern": "^[a-f0-9]{64}$",
+      "title": "Source Tree Sha256",
+      "type": "string"
+    }
+  },
+  "required": [
+    "generated_at",
+    "environment",
+    "python_version",
+    "source_tree_sha256",
+    "checks",
+    "claims"
+  ],
+  "title": "LocalEvidenceReport",
+  "type": "object"
+}

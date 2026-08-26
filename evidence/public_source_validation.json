@@ -1,0 +1,98 @@
+{
+  "report_version": 1,
+  "generated_at": "2026-08-25T08:20:26.357246Z",
+  "catalog_sha256": "d471578cd4f36799e424c36e44ecf5ddaf53a73ea16c8b1e8e89e9100948eb29",
+  "catalog_terms_checked_at": "2026-08-25",
+  "observations": [
+    {
+      "source_id": "abs_c21_g01_sa2_vic",
+      "publisher": "Australian Bureau of Statistics",
+      "retrieved_at": "2026-08-24T05:26:35.640305Z",
+      "byte_count": 128977,
+      "response_record_count": null,
+      "sha256": "8d0eb6ded1795616386a92ed1076edde2caa53a1116810cf54e34553306cec40",
+      "licence_name": "Creative Commons Attribution 4.0 International",
+      "licence_url": "https://creativecommons.org/licenses/by/4.0/",
+      "attribution_text": "Based on Australian Bureau of Statistics 2021 Census data.",
+      "limitations": [
+        "Bounded official SDMX query; Census perturbation and product notes apply.",
+        "Exact bounded release/query URL was resolved by the operator and recorded."
+      ]
+    },
+    {
+      "source_id": "abs_c21_g02_sa2_vic",
+      "publisher": "Australian Bureau of Statistics",
+      "retrieved_at": "2026-08-24T05:26:35.933851Z",
+      "byte_count": 131506,
+      "response_record_count": null,
+      "sha256": "2dd2cbc30fca47e75ee7540ff8d1f64df4d22c8d467d0be706db1ffbab6f1df1",
+      "licence_name": "Creative Commons Attribution 4.0 International",
+      "licence_url": "https://creativecommons.org/licenses/by/4.0/",
+      "attribution_text": "Based on Australian Bureau of Statistics 2021 Census data.",
+      "limitations": [
+        "Bounded official SDMX query; published household-income exclusions apply.",
+        "Exact bounded release/query URL was resolved by the operator and recorded."
+      ]
+    },
+    {
+      "source_id": "abs_c21_g37_sa2_vic",
+      "publisher": "Australian Bureau of Statistics",
+      "retrieved_at": "2026-08-24T05:26:36.175169Z",
+      "byte_count": 397849,
+      "response_record_count": null,
+      "sha256": "f64c717476bf2ad3e4737cf394e58cc83f4aff9b6690c6f4e1367064e6a8e4e4",
+      "licence_name": "Creative Commons Attribution 4.0 International",
+      "licence_url": "https://creativecommons.org/licenses/by/4.0/",
+      "attribution_text": "Based on Australian Bureau of Statistics 2021 Census data.",
+      "limitations": [
+        "Bounded official SDMX query; Census perturbation and product notes apply.",
+        "Exact bounded release/query URL was resolved by the operator and recorded."
+      ]
+    },
+    {
+      "source_id": "melbourne_clue_business_context",
+      "publisher": "City of Melbourne",
+      "retrieved_at": "2026-08-24T03:16:30.261029Z",
+      "byte_count": 142067,
+      "response_record_count": null,
+      "sha256": "571dc26325283f650d6ee3669f8b2855c63f914334df977e3f27cca0eaca7072",
+      "licence_name": "Creative Commons Attribution 4.0 International",
+      "licence_url": "https://creativecommons.org/licenses/by/4.0/",
+      "attribution_text": "Contains City of Melbourne CLUE data licensed under CC BY 4.0.",
+      "limitations": [
+        "Cells containing two or fewer establishments may be suppressed."
+      ]
+    },
+    {
+      "source_id": "rba_f1_interest_rates",
+      "publisher": "Reserve Bank of Australia",
+      "retrieved_at": "2026-08-24T03:16:30.106094Z",
+      "byte_count": 305285,
+      "response_record_count": null,
+      "sha256": "98207e58e64200903b8913b00da104c5fedd424add541975ee7431784b6b09fe",
+      "licence_name": "RBA Copyright and Disclaimer Notice",
+      "licence_url": "https://www.rba.gov.au/copyright/",
+      "attribution_text": "Source: Reserve Bank of Australia; no endorsement implied.",
+      "limitations": [
+        "Capture vintage because series can be revised or withdrawn."
+      ]
+    },
+    {
+      "source_id": "vicmap_address",
+      "publisher": "Department of Transport and Planning, Victoria",
+      "retrieved_at": "2026-08-24T03:17:04.169602Z",
+      "byte_count": 5443,
+      "response_record_count": 25,
+      "sha256": "1aaa7ef5b1f109ce9ed2016a48f34c45355a59b9b75a19c80ccd313dc88049b9",
+      "licence_name": "Creative Commons Attribution 4.0 International",
+      "licence_url": "https://creativecommons.org/licenses/by/4.0/",
+      "attribution_text": "Contains Victorian Government data licensed under CC BY 4.0.",
+      "limitations": [
+        "Preserve source identifiers and weekly retrieval vintage.",
+        "One explicitly filtered ArcGIS page; not a statewide completeness claim."
+      ]
+    }
+  ],
+  "evidence_level": "LOCALLY_VERIFIED",
+  "scope_limitation": "HTTP acquisition and local content hashes only; not GCS or BigQuery runtime evidence. Raw records remain outside Git and source licences continue to apply."
+}

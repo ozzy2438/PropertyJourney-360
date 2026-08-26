@@ -1,0 +1,297 @@
+{
+  "$defs": {
+    "EventType": {
+      "enum": [
+        "SEARCH",
+        "VIEW",
+        "SAVE",
+        "ENQUIRY",
+        "IDENTIFY"
+      ],
+      "title": "EventType",
+      "type": "string"
+    }
+  },
+  "additionalProperties": false,
+  "allOf": [
+    {
+      "anyOf": [
+        {
+          "properties": {
+            "anonymous_id": {
+              "minLength": 1,
+              "type": "string"
+            }
+          },
+          "required": [
+            "anonymous_id"
+          ]
+        },
+        {
+          "properties": {
+            "customer_id": {
+              "minLength": 1,
+              "type": "string"
+            }
+          },
+          "required": [
+            "customer_id"
+          ]
+        },
+        {
+          "properties": {
+            "customer_source_id": {
+              "minLength": 1,
+              "type": "string"
+            },
+            "customer_source_system": {
+              "minLength": 1,
+              "type": "string"
+            }
+          },
+          "required": [
+            "customer_source_system",
+            "customer_source_id"
+          ]
+        }
+      ]
+    },
+    {
+      "if": {
+        "properties": {
+          "customer_source_system": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "customer_source_system"
+        ]
+      },
+      "then": {
+        "properties": {
+          "customer_source_id": {
+            "minLength": 1,
+            "type": "string"
+          }
+        },
+        "required": [
+          "customer_source_id"
+        ]
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "customer_source_id": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "customer_source_id"
+        ]
+      },
+      "then": {
+        "properties": {
+          "customer_source_system": {
+            "minLength": 1,
+            "type": "string"
+          }
+        },
+        "required": [
+          "customer_source_system"
+        ]
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "event_type": {
+            "const": "IDENTIFY"
+          }
+        }
+      },
+      "then": {
+        "anyOf": [
+          {
+            "properties": {
+              "customer_id": {
+                "minLength": 1,
+                "type": "string"
+              }
+            },
+            "required": [
+              "customer_id"
+            ]
+          },
+          {
+            "properties": {
+              "customer_source_id": {
+                "minLength": 1,
+                "type": "string"
+              },
+              "customer_source_system": {
+                "minLength": 1,
+                "type": "string"
+              }
+            },
+            "required": [
+              "customer_source_system",
+              "customer_source_id"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "schema_version": {
+            "const": 1
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "device_type": {
+            "type": "null"
+          }
+        }
+      }
+    }
+  ],
+  "properties": {
+    "anonymous_id": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Anonymous Id"
+    },
+    "attributes": {
+      "additionalProperties": true,
+      "title": "Attributes",
+      "type": "object"
+    },
+    "customer_id": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Customer Id"
+    },
+    "customer_source_id": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Customer Source Id"
+    },
+    "customer_source_system": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Customer Source System"
+    },
+    "device_type": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Device Type"
+    },
+    "event_id": {
+      "maxLength": 128,
+      "minLength": 1,
+      "title": "Event Id",
+      "type": "string"
+    },
+    "event_type": {
+      "$ref": "#/$defs/EventType"
+    },
+    "occurred_at": {
+      "format": "date-time",
+      "title": "Occurred At",
+      "type": "string"
+    },
+    "price_observed": {
+      "anyOf": [
+        {
+          "minimum": 0,
+          "type": "number"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Price Observed"
+    },
+    "property_id": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Property Id"
+    },
+    "received_at": {
+      "format": "date-time",
+      "title": "Received At",
+      "type": "string"
+    },
+    "schema_version": {
+      "enum": [
+        1,
+        2
+      ],
+      "title": "Schema Version",
+      "type": "integer"
+    },
+    "session_id": {
+      "maxLength": 128,
+      "minLength": 1,
+      "title": "Session Id",
+      "type": "string"
+    }
+  },
+  "required": [
+    "schema_version",
+    "event_id",
+    "event_type",
+    "occurred_at",
+    "received_at",
+    "session_id"
+  ],
+  "title": "PropertyEvent",
+  "type": "object"
+}

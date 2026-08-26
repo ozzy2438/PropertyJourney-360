@@ -1,0 +1,21 @@
+project_id        = "replace-with-gcp-project-id"
+region            = "australia-southeast1"
+bigquery_location = "australia-southeast1"
+environment       = "dev"
+
+# Budget creation requires billing-account-level permission during the owner bootstrap.
+billing_account_id = null
+monthly_budget_aud = 25
+alert_email        = null
+
+# First apply with deploy_api=false to create Artifact Registry. The owner-gated deployment
+# workflow then pushes an image and applies this configuration using the immutable digest.
+deploy_api = false
+api_image  = null
+
+# Add version 1 to the api-bearer-token secret out of band before enabling the API.
+# Rotate by adding a new version and updating this value; never use "latest" here.
+api_bearer_secret_version = "1"
+
+# Never use allUsers or allAuthenticatedUsers. Add only explicit authenticated principals.
+cloud_run_invokers = []

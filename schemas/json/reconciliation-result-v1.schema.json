@@ -1,0 +1,87 @@
+{
+  "$defs": {
+    "ReconciliationCounts": {
+      "additionalProperties": false,
+      "properties": {
+        "accepted": {
+          "minimum": 0,
+          "title": "Accepted",
+          "type": "integer"
+        },
+        "explained_duplicates": {
+          "minimum": 0,
+          "title": "Explained Duplicates",
+          "type": "integer"
+        },
+        "quarantined": {
+          "minimum": 0,
+          "title": "Quarantined",
+          "type": "integer"
+        },
+        "rejected": {
+          "minimum": 0,
+          "title": "Rejected",
+          "type": "integer"
+        },
+        "source": {
+          "minimum": 0,
+          "title": "Source",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "source",
+        "accepted",
+        "quarantined",
+        "rejected",
+        "explained_duplicates"
+      ],
+      "title": "ReconciliationCounts",
+      "type": "object"
+    },
+    "ReconciliationStatus": {
+      "enum": [
+        "PASSED",
+        "FAILED"
+      ],
+      "title": "ReconciliationStatus",
+      "type": "string"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "checked_at": {
+      "format": "date-time",
+      "title": "Checked At",
+      "type": "string"
+    },
+    "counts": {
+      "$ref": "#/$defs/ReconciliationCounts"
+    },
+    "dataset": {
+      "title": "Dataset",
+      "type": "string"
+    },
+    "explanation": {
+      "title": "Explanation",
+      "type": "string"
+    },
+    "run_id": {
+      "title": "Run Id",
+      "type": "string"
+    },
+    "status": {
+      "$ref": "#/$defs/ReconciliationStatus"
+    }
+  },
+  "required": [
+    "run_id",
+    "dataset",
+    "status",
+    "counts",
+    "checked_at",
+    "explanation"
+  ],
+  "title": "ReconciliationResult",
+  "type": "object"
+}

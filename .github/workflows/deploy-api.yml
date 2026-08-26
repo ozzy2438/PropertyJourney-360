@@ -1,0 +1,94 @@
+name: Owner-gated API image build
+
+on:
+  workflow_dispatch:
+    inputs:
+      confirm_build:
+        description: Type BUILD to publish an immutable image for a reviewed Terraform plan
+        required: true
+        type: string
+
+permissions:
+  contents: read
+  id-token: write
+
+concurrency:
+  group: api-image-build
+  cancel-in-progress: false
+
+jobs:
+  build:
+    name: Build immutable API image
+    if: >-
+      ${{ inputs.confirm_build == 'BUILD' &&
+          github.actor == github.repository_owner }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    environment:
+      name: production
+    steps:
+      - name: Require owner, main, and explicit build confirmation
+        run: |
+          test "${GITHUB_REF}" = "refs/heads/main"
+          test "${GITHUB_ACTOR}" = "${GITHUB_REPOSITORY_OWNER}"
+          test "${{ inputs.confirm_build }}" = "BUILD"
+
+      - name: Check out repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+
+      - name: Authenticate with short-lived Google credentials
+        uses: google-github-actions/auth@7c6bc770dae815cd3e89ee6cdf493a5fab2cc093
+        with:
+          workload_identity_provider: ${{ vars.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+          service_account: ${{ vars.GCP_IMAGE_BUILDER_SERVICE_ACCOUNT }}
+
+      - name: Set up Google Cloud CLI
+        uses: google-github-actions/setup-gcloud@aa5489c8933f4cc7a4f7d45035b3b1440c9c10db
+        with:
+          version: "544.0.0"
+
+      - name: Require bootstrapped Artifact Registry
+        run: >-
+          gcloud artifacts repositories describe
+          "${{ vars.ARTIFACT_REPOSITORY }}"
+          --location "${{ vars.GCP_REGION }}"
+          --project "${{ vars.GCP_PROJECT_ID }}"
+          --quiet
+
+      - name: Configure registry authentication
+        run: gcloud auth configure-docker "${{ vars.GCP_REGION }}-docker.pkg.dev" --quiet
+
+      - name: Compute image repository
+        id: image
+        run: >-
+          echo "uri=${{ vars.GCP_REGION }}-docker.pkg.dev/${{ vars.GCP_PROJECT_ID }}/${{ vars.ARTIFACT_REPOSITORY }}/propertyjourney360-api"
+          >> "${GITHUB_OUTPUT}"
+
+      - name: Set up Buildx
+        uses: docker/setup-buildx-action@37fe631027851001ddb9b187196cc803df7f5f0e
+
+      - name: Build and push commit-addressed image
+        id: build
+        uses: docker/build-push-action@53b7df96c91f9c12dcc8a07bcb9ccacbed38856a
+        with:
+          context: .
+          file: Dockerfile
+          push: true
+          tags: ${{ steps.image.outputs.uri }}:${{ github.sha }}
+          provenance: mode=max
+          sbom: true
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Publish exact image reference for the Terraform plan workflow
+        env:
+          IMAGE_URI: ${{ steps.image.outputs.uri }}
+          IMAGE_DIGEST: ${{ steps.build.outputs.digest }}
+        run: |
+          test -n "${IMAGE_DIGEST}"
+          {
+            echo "### Immutable API image"
+            echo "${IMAGE_URI}@${IMAGE_DIGEST}"
+            echo "Use this exact image@digest as the api_image input of a Terraform plan."
+            echo "Review its saved plan artifact, then run the separate owner-confirmed apply."
+          } >> "${GITHUB_STEP_SUMMARY}"

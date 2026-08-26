@@ -1,0 +1,287 @@
+{
+  "$defs": {
+    "ClusterMetrics": {
+      "additionalProperties": false,
+      "properties": {
+        "evaluated_pairs": {
+          "minimum": 0,
+          "title": "Evaluated Pairs",
+          "type": "integer"
+        },
+        "f1": {
+          "maximum": 1,
+          "minimum": 0,
+          "title": "F1",
+          "type": "number"
+        },
+        "false_negatives": {
+          "minimum": 0,
+          "title": "False Negatives",
+          "type": "integer"
+        },
+        "false_positive_merges": {
+          "minimum": 0,
+          "title": "False Positive Merges",
+          "type": "integer"
+        },
+        "precision": {
+          "maximum": 1,
+          "minimum": 0,
+          "title": "Precision",
+          "type": "number"
+        },
+        "recall": {
+          "maximum": 1,
+          "minimum": 0,
+          "title": "Recall",
+          "type": "number"
+        },
+        "true_negatives": {
+          "minimum": 0,
+          "title": "True Negatives",
+          "type": "integer"
+        },
+        "true_positives": {
+          "minimum": 0,
+          "title": "True Positives",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "evaluated_pairs",
+        "true_positives",
+        "false_positive_merges",
+        "false_negatives",
+        "true_negatives",
+        "precision",
+        "recall",
+        "f1"
+      ],
+      "title": "ClusterMetrics",
+      "type": "object"
+    },
+    "ConfidenceInterval": {
+      "additionalProperties": false,
+      "properties": {
+        "confidence": {
+          "exclusiveMaximum": 1,
+          "exclusiveMinimum": 0,
+          "title": "Confidence",
+          "type": "number"
+        },
+        "lower": {
+          "maximum": 1,
+          "minimum": 0,
+          "title": "Lower",
+          "type": "number"
+        },
+        "method": {
+          "title": "Method",
+          "type": "string"
+        },
+        "upper": {
+          "maximum": 1,
+          "minimum": 0,
+          "title": "Upper",
+          "type": "number"
+        }
+      },
+      "required": [
+        "confidence",
+        "lower",
+        "upper",
+        "method"
+      ],
+      "title": "ConfidenceInterval",
+      "type": "object"
+    },
+    "EvidenceLevel": {
+      "enum": [
+        "DESIGNED",
+        "IMPLEMENTED",
+        "LOCALLY_VERIFIED",
+        "CLOUD_VERIFIED",
+        "SUSTAINED"
+      ],
+      "title": "EvidenceLevel",
+      "type": "string"
+    },
+    "IdentityMetrics": {
+      "additionalProperties": false,
+      "properties": {
+        "evaluated_pairs": {
+          "minimum": 0,
+          "title": "Evaluated Pairs",
+          "type": "integer"
+        },
+        "f1": {
+          "maximum": 1,
+          "minimum": 0,
+          "title": "F1",
+          "type": "number"
+        },
+        "false_negatives": {
+          "minimum": 0,
+          "title": "False Negatives",
+          "type": "integer"
+        },
+        "false_positive_merges": {
+          "minimum": 0,
+          "title": "False Positive Merges",
+          "type": "integer"
+        },
+        "manual_review_pairs": {
+          "minimum": 0,
+          "title": "Manual Review Pairs",
+          "type": "integer"
+        },
+        "manual_review_rate": {
+          "maximum": 1,
+          "minimum": 0,
+          "title": "Manual Review Rate",
+          "type": "number"
+        },
+        "precision": {
+          "maximum": 1,
+          "minimum": 0,
+          "title": "Precision",
+          "type": "number"
+        },
+        "recall": {
+          "maximum": 1,
+          "minimum": 0,
+          "title": "Recall",
+          "type": "number"
+        },
+        "true_negatives": {
+          "minimum": 0,
+          "title": "True Negatives",
+          "type": "integer"
+        },
+        "true_positives": {
+          "minimum": 0,
+          "title": "True Positives",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "evaluated_pairs",
+        "true_positives",
+        "false_positive_merges",
+        "false_negatives",
+        "true_negatives",
+        "manual_review_pairs",
+        "precision",
+        "recall",
+        "f1",
+        "manual_review_rate"
+      ],
+      "title": "IdentityMetrics",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "cluster_conflict_count": {
+      "minimum": 0,
+      "title": "Cluster Conflict Count",
+      "type": "integer"
+    },
+    "cluster_metrics": {
+      "$ref": "#/$defs/ClusterMetrics"
+    },
+    "cluster_precision_interval_95": {
+      "$ref": "#/$defs/ConfidenceInterval"
+    },
+    "cluster_recall_interval_95": {
+      "$ref": "#/$defs/ConfidenceInterval"
+    },
+    "evaluation_seed": {
+      "title": "Evaluation Seed",
+      "type": "integer"
+    },
+    "evidence_level": {
+      "$ref": "#/$defs/EvidenceLevel"
+    },
+    "generated_at": {
+      "format": "date-time",
+      "title": "Generated At",
+      "type": "string"
+    },
+    "held_out_customer_count": {
+      "minimum": 1,
+      "title": "Held Out Customer Count",
+      "type": "integer"
+    },
+    "held_out_source_identity_count": {
+      "minimum": 1,
+      "title": "Held Out Source Identity Count",
+      "type": "integer"
+    },
+    "pair_metrics": {
+      "$ref": "#/$defs/IdentityMetrics"
+    },
+    "report_version": {
+      "default": 1,
+      "title": "Report Version",
+      "type": "integer"
+    },
+    "ruleset_version": {
+      "title": "Ruleset Version",
+      "type": "string"
+    },
+    "scope_limitation": {
+      "title": "Scope Limitation",
+      "type": "string"
+    },
+    "source_hashes": {
+      "additionalProperties": {
+        "type": "string"
+      },
+      "title": "Source Hashes",
+      "type": "object"
+    },
+    "target_precision": {
+      "maximum": 1,
+      "minimum": 0,
+      "title": "Target Precision",
+      "type": "number"
+    },
+    "target_recall": {
+      "maximum": 1,
+      "minimum": 0,
+      "title": "Target Recall",
+      "type": "number"
+    },
+    "target_status": {
+      "title": "Target Status",
+      "type": "string"
+    },
+    "total_synthetic_customers": {
+      "minimum": 1,
+      "title": "Total Synthetic Customers",
+      "type": "integer"
+    }
+  },
+  "required": [
+    "generated_at",
+    "ruleset_version",
+    "evaluation_seed",
+    "total_synthetic_customers",
+    "held_out_customer_count",
+    "held_out_source_identity_count",
+    "pair_metrics",
+    "cluster_metrics",
+    "cluster_conflict_count",
+    "cluster_precision_interval_95",
+    "cluster_recall_interval_95",
+    "source_hashes",
+    "target_precision",
+    "target_recall",
+    "target_status",
+    "evidence_level",
+    "scope_limitation"
+  ],
+  "title": "IdentityEvaluationReport",
+  "type": "object"
+}

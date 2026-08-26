@@ -1,0 +1,98 @@
+{
+  "report_version": 1,
+  "generated_at": "2026-08-25T08:20:30.554787Z",
+  "environment": "local",
+  "python_version": "3.12.14",
+  "source_tree_sha256": "6f15f039d4a385e40f4ddd43762c6527bd0203d89b3b11a072c06db29ab8cc9a",
+  "checks": [
+    {
+      "name": "ruff",
+      "command": [
+        "/Users/osmanorka/PropertyJourney-360/.venv/bin/python",
+        "-m",
+        "ruff",
+        "check",
+        "."
+      ],
+      "exit_code": 0,
+      "duration_seconds": 0.11713,
+      "output_sha256": "f0d0b1081d9d3ebb26c4c93543053ecdc0a58998f22c071dc4ddb26021b57645",
+      "output_tail": "All checks passed!"
+    },
+    {
+      "name": "ruff_format",
+      "command": [
+        "/Users/osmanorka/PropertyJourney-360/.venv/bin/python",
+        "-m",
+        "ruff",
+        "format",
+        "--check",
+        "."
+      ],
+      "exit_code": 0,
+      "duration_seconds": 0.069212,
+      "output_sha256": "efd84d23df1b4f629a69cc1a700756319562d8812dfa337ba238ea9e856e794b",
+      "output_tail": "95 files already formatted"
+    },
+    {
+      "name": "mypy",
+      "command": [
+        "/Users/osmanorka/PropertyJourney-360/.venv/bin/python",
+        "-m",
+        "mypy",
+        "src"
+      ],
+      "exit_code": 0,
+      "duration_seconds": 0.487504,
+      "output_sha256": "9f788e74a476f582a1cf1783dc8513e9a69d6fa0f0dc669bcdff4e38a97f773f",
+      "output_tail": "Success: no issues found in 40 source files"
+    },
+    {
+      "name": "pytest",
+      "command": [
+        "/Users/osmanorka/PropertyJourney-360/.venv/bin/python",
+        "-m",
+        "pytest",
+        "--cov=propertyjourney360",
+        "--cov-report=json:/var/folders/q3/8y6rkgcj0ygcmhp49xjqhpww0000gn/T/pj360-evidence-y3bmheza/coverage.json",
+        "-q"
+      ],
+      "exit_code": 0,
+      "duration_seconds": 3.711207,
+      "output_sha256": "78c8976f4e6a7eded6864a8c582458f5ea03ff5aec5b5ed938cf1b837d6c0267",
+      "output_tail": "........................................................................ [ 40%]\n........................................................................ [ 81%]\n................................                                         [100%]\n=============================== warnings summary ===============================\n.venv/lib/python3.12/site-packages/fastapi/testclient.py:1\n  /Users/osmanorka/PropertyJourney-360/.venv/lib/python3.12/site-packages/fastapi/testclient.py:1: StarletteDeprecationWarning: Using `httpx` with `starlette.testclient` is deprecated; install `httpx2` instead.\n    from starlette.testclient import TestClient as TestClient  # noqa\n\n-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html\n================================ tests coverage ================================\n______________ coverage: platform darwin, python 3.12.14-final-0 _______________\n\nCoverage JSON written to file /var/folders/q3/8y6rkgcj0ygcmhp49xjqhpww0000gn/T/pj360-evidence-y3bmheza/coverage.json\nRequired test coverage of 85.0% reached. Total coverage: 86.09%\n176 passed, 1 warning in 3.12s"
+    }
+  ],
+  "claims": [
+    {
+      "claim_id": "local_quality_gates",
+      "description": "Lint, strict type checks and Python tests execute successfully.",
+      "level": "LOCALLY_VERIFIED",
+      "target": "all exit codes 0",
+      "actual": "all exit codes 0",
+      "evidence_status": "PASSED",
+      "limitation": "Local checks do not prove Salesforce or GCP runtime behaviour."
+    },
+    {
+      "claim_id": "python_branch_coverage",
+      "description": "Python branch coverage for the local test suite.",
+      "level": "LOCALLY_VERIFIED",
+      "target": 85,
+      "actual": 86.09,
+      "evidence_status": "MEASURED",
+      "limitation": "Coverage percentage is not a production reliability metric."
+    },
+    {
+      "claim_id": "cloud_runtime",
+      "description": "Salesforce and GCP pipeline execution.",
+      "level": "IMPLEMENTED",
+      "target": "CLOUD_VERIFIED",
+      "actual": null,
+      "evidence_status": "NOT_OBSERVED",
+      "limitation": "Requires owner-configured Salesforce and GCP environments."
+    }
+  ],
+  "measurements": {
+    "python_branch_coverage_percent": 86.08713522400329
+  }
+}

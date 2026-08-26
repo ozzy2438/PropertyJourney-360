@@ -1,0 +1,16 @@
+.git
+.github
+.mypy_cache
+.pytest_cache
+.ruff_cache
+.terraform
+.venv
+__pycache__
+*.py[cod]
+*.sqlite
+*.sqlite3
+.coverage
+coverage.xml
+data
+evidence/generated
+infra/terraform/tfplan*

@@ -1,0 +1,137 @@
+version: 2
+
+models:
+  - name: reconciliation_result
+    description: "Per-run conservation equation: source equals accepted plus quarantined plus rejected plus explained duplicates."
+    config: {contract: {enforced: true}}
+    columns:
+      - {name: reconciliation_result_id, data_type: string, data_tests: [not_null, unique]}
+      - {name: pipeline_run_id, data_type: string, data_tests: [not_null]}
+      - {name: orchestration_window_id, data_type: string}
+      - {name: asset_name, data_type: string, data_tests: [not_null]}
+      - {name: source_count, data_type: int64, data_tests: [not_null]}
+      - {name: accepted_count, data_type: int64, data_tests: [not_null]}
+      - {name: quarantined_count, data_type: int64, data_tests: [not_null]}
+      - {name: rejected_count, data_type: int64, data_tests: [not_null]}
+      - {name: explained_duplicate_count, data_type: int64, data_tests: [not_null]}
+      - {name: difference_count, data_type: int64, data_tests: [not_null]}
+      - name: reconciliation_status
+        data_type: string
+        data_tests:
+          - accepted_values:
+              arguments: {values: ['PASS', 'FAIL']}
+      - {name: reconciled_at, data_type: timestamp, data_tests: [not_null]}
+      - {name: reconciliation_date, data_type: date, data_tests: [not_null]}
+
+  - name: dq_volume_anomaly
+    description: Source-volume drift check that waits for at least three prior runs before alerting.
+    columns:
+      - name: reconciliation_result_id
+        data_tests:
+          - not_null
+          - unique
+          - relationships:
+              arguments: {to: "ref('reconciliation_result')", field: reconciliation_result_id}
+      - name: volume_status
+        data_tests:
+          - accepted_values:
+              arguments: {values: ['INSUFFICIENT_HISTORY', 'WITHIN_RANGE', 'ANOMALY']}
+
+  - name: dq_issue
+    description: Deterministic data-quality and identity-review issue ledger.
+    config: {contract: {enforced: true}}
+    columns:
+      - {name: issue_id, data_type: string, data_tests: [not_null, unique]}
+      - {name: record_type, data_type: string, data_tests: [not_null]}
+      - {name: source_system, data_type: string, data_tests: [not_null]}
+      - {name: source_record_id, data_type: string}
+      - {name: lineage_ingestion_key, data_type: string, data_tests: [not_null]}
+      - {name: issue_code, data_type: string, data_tests: [not_null]}
+      - name: severity
+        data_type: string
+        data_tests:
+          - accepted_values:
+              arguments: {values: ['HIGH', 'MEDIUM', 'LOW']}
+      - name: issue_type
+        data_type: string
+        data_tests:
+          - accepted_values:
+              arguments: {values: ['IDENTITY_REVIEW', 'VOLUME_ANOMALY', 'DATA_INTEGRITY_COLLISION', 'RECORD_VALIDATION']}
+      - {name: detected_at, data_type: timestamp, data_tests: [not_null]}
+
+  - name: dq_quarantine
+    description: Non-destructive quarantine envelopes retaining lineage without duplicating raw private attributes.
+    config: {contract: {enforced: true}}
+    columns:
+      - {name: quarantine_id, data_type: string, data_tests: [not_null, unique]}
+      - name: issue_id
+        data_type: string
+        data_tests:
+          - not_null
+          - unique
+          - relationships:
+              arguments: {to: "ref('dq_issue')", field: issue_id}
+      - {name: record_type, data_type: string}
+      - {name: source_system, data_type: string}
+      - {name: source_record_id, data_type: string}
+      - {name: lineage_ingestion_key, data_type: string}
+      - {name: issue_code, data_type: string}
+      - {name: severity, data_type: string}
+      - {name: quarantined_at, data_type: timestamp}
+      - {name: quarantine_envelope, data_type: string}
+      - name: quarantine_status
+        data_type: string
+        data_tests:
+          - accepted_values:
+              arguments: {values: ['AWAITING_REMEDIATION']}
+
+  - name: remediation_case
+    description: Durable remediation state machine; dbt creates OPEN cases and controlled operators advance them.
+    config: {contract: {enforced: true}}
+    columns:
+      - {name: remediation_case_id, data_type: string, data_tests: [not_null, unique]}
+      - {name: issue_id, data_type: string, data_tests: [not_null, unique]}
+      - {name: issue_type, data_type: string}
+      - {name: issue_code, data_type: string}
+      - {name: severity, data_type: string}
+      - {name: source_system, data_type: string}
+      - {name: source_record_id, data_type: string}
+      - name: status
+        data_type: string
+        data_tests:
+          - accepted_values:
+              arguments: {values: ['OPEN', 'IN_REVIEW', 'RESOLVED', 'REPLAYED', 'VERIFIED', 'CLOSED']}
+      - {name: opened_at, data_type: timestamp, data_tests: [not_null]}
+      - {name: opened_date, data_type: date, data_tests: [not_null]}
+      - {name: updated_at, data_type: timestamp, data_tests: [not_null]}
+      - {name: resolution_action, data_type: string}
+      - {name: resolved_by, data_type: string}
+      - {name: replay_id, data_type: string}
+      - {name: verified_at, data_type: timestamp}
+      - {name: closed_at, data_type: timestamp}
+
+  - name: ingestion_watermark
+    description: Read-only current high-watermark view used for observability, never for mutable orchestration state.
+    config: {contract: {enforced: true}}
+    columns:
+      - {name: asset_name, data_type: string, data_tests: [not_null, unique]}
+      - {name: source_high_watermark, data_type: timestamp}
+      - {name: latest_ingested_at, data_type: timestamp}
+      - {name: staged_record_count, data_type: int64, data_tests: [not_null]}
+
+  - name: pipeline_run_audit
+    description: Append-oriented dbt invocation audit; status covers transformation and reconciliation only.
+    config: {contract: {enforced: true}}
+    columns:
+      - {name: pipeline_run_id, data_type: string, data_tests: [not_null, unique]}
+      - {name: transformed_at, data_type: timestamp, data_tests: [not_null]}
+      - {name: reconciled_at, data_type: timestamp, data_tests: [not_null]}
+      - name: pipeline_status
+        data_type: string
+        data_tests:
+          - accepted_values:
+              arguments: {values: ['TRANSFORMED_RECONCILED', 'RECONCILIATION_FAILED']}
+      - {name: reconciliation_check_count, data_type: int64, data_tests: [not_null]}
+      - {name: failed_reconciliation_count, data_type: int64, data_tests: [not_null]}
+      - {name: dbt_target, data_type: string, data_tests: [not_null]}
+      - {name: audit_date, data_type: date, data_tests: [not_null]}

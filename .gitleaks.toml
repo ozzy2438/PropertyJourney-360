@@ -1,0 +1,4 @@
+title = "PropertyJourney 360 secret scanning"
+
+[extend]
+useDefault = true

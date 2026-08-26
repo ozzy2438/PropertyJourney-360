@@ -1,0 +1,226 @@
+catalog_version: 1
+terms_checked_at: 2026-08-25
+sources:
+  - source_id: vicmap_address
+    enabled: true
+    publisher: Department of Transport and Planning, Victoria
+    dataset_title: Vicmap Address
+    metadata_url: https://www.land.vic.gov.au/maps-and-spatial/spatial-data/vicmap-catalogue/vicmap-address
+    access_url: https://services-ap1.arcgis.com/P744lA0wf4LlBZ84/ArcGIS/rest/services/Vicmap_Address/FeatureServer/0/query
+    access_method: arcgis_rest
+    format: esri_json
+    update_frequency: weekly
+    record_grain: one authoritative address record
+    geographic_coverage: Victoria, Australia
+    query_or_filter: selected LGA/postcode; resultOffset pagination; outSR=4326
+    licence_name: Creative Commons Attribution 4.0 International
+    licence_url: https://creativecommons.org/licenses/by/4.0/
+    attribution_text: Contains Victorian Government data licensed under CC BY 4.0.
+    redistribution_status: allowed
+    third_party_material_policy: exclude material separately identified as third-party
+    repo_policy: raw_out_of_git
+    quality_notes: Preserve source identifiers and weekly retrieval vintage.
+
+  - source_id: vicmap_property
+    enabled: true
+    publisher: Department of Transport and Planning, Victoria
+    dataset_title: Vicmap Property
+    metadata_url: https://www.land.vic.gov.au/maps-and-spatial/spatial-data/vicmap-catalogue/vicmap-property
+    access_url: https://services-ap1.arcgis.com/P744lA0wf4LlBZ84/ArcGIS/rest/services/Vicmap_Property/FeatureServer/0/query
+    access_method: arcgis_rest
+    format: esri_json
+    update_frequency: weekly
+    record_grain: one property parcel/feature
+    geographic_coverage: Victoria, Australia
+    query_or_filter: selected geography only; simplify analytic geometry; outSR=4326
+    licence_name: Creative Commons Attribution 4.0 International
+    licence_url: https://creativecommons.org/licenses/by/4.0/
+    attribution_text: Contains Victorian Government data licensed under CC BY 4.0.
+    redistribution_status: allowed
+    third_party_material_policy: exclude material separately identified as third-party
+    repo_policy: raw_out_of_git
+    quality_notes: Full statewide polygon ingest is deliberately outside the default profile.
+
+  - source_id: vgv_property_sales_timeseries
+    enabled: true
+    publisher: Valuer-General Victoria
+    dataset_title: Annual house, unit and vacant-land median prices by Victorian suburb
+    metadata_url: https://www.land.vic.gov.au/valuations/resources-and-reports/property-sales-statistics
+    access_url: https://www.land.vic.gov.au/valuations/resources-and-reports/property-sales-statistics
+    access_method: metadata_resolved_file
+    format: xlsx
+    update_frequency: annual_with_revisions
+    record_grain: suburb/property-type aggregate by reporting period
+    geographic_coverage: Victoria, Australia
+    query_or_filter: aggregate reports only; transaction-level services are excluded
+    licence_name: Creative Commons Attribution 4.0 International
+    licence_url: https://creativecommons.org/licenses/by/4.0/
+    attribution_text: Contains Victorian Government data licensed under CC BY 4.0.
+    redistribution_status: allowed
+    third_party_material_policy: exclude separately licensed material
+    repo_policy: derived_allowed
+    quality_notes: Pinned 2025 annual workbooks are browser-acquired because Cloudflare blocks the automated client; preserve file hash, quality markers and release vintage, exclude preliminary 2026 values, and never infer absent sales volumes.
+
+  - source_id: abs_data_api
+    enabled: true
+    publisher: Australian Bureau of Statistics
+    dataset_title: ABS Data API selected demographic and dwelling dataflows
+    metadata_url: https://www.abs.gov.au/statistics/application-programming-interfaces-apis/data-api-user-guide
+    access_url: https://data.api.abs.gov.au/rest/dataflow/ABS
+    access_method: sdmx_rest
+    format: csv
+    update_frequency: per_dataflow
+    record_grain: selected measure by reference period and official geography
+    geographic_coverage: selected Victorian SA2/geographies
+    query_or_filter: pin dataflow/version; slice geography and time; never request unbounded all
+    licence_name: Creative Commons Attribution 4.0 International
+    licence_url: https://creativecommons.org/licenses/by/4.0/
+    attribution_text: Based on Australian Bureau of Statistics data.
+    redistribution_status: allowed
+    third_party_material_policy: verify each selected product before enabling
+    repo_policy: derived_allowed
+    quality_notes: Beta API has response size/time limits and may lag website releases.
+
+  - source_id: abs_c21_g01_sa2_vic
+    enabled: true
+    publisher: Australian Bureau of Statistics
+    dataset_title: Census 2021 G01 selected person characteristics, Victorian SA2
+    metadata_url: https://www.abs.gov.au/census/guide-census-data
+    access_url: "https://data.api.abs.gov.au/rest/data/ABS,C21_G01_SA2,1.0.0/3.P_1..SA2.2?startPeriod=2021&endPeriod=2021&dimensionAtObservation=AllDimensions&format=csvfilewithlabels"
+    access_method: sdmx_rest
+    format: csv
+    update_frequency: census_release
+    record_grain: total persons by 2021 Victorian SA2
+    geographic_coverage: Victoria Statistical Areas Level 2
+    query_or_filter: pinned C21_G01_SA2 v1.0.0; persons and total-persons measure; Victoria SA2 only
+    licence_name: Creative Commons Attribution 4.0 International
+    licence_url: https://creativecommons.org/licenses/by/4.0/
+    attribution_text: Based on Australian Bureau of Statistics 2021 Census data.
+    redistribution_status: allowed
+    third_party_material_policy: selected official ABS observations only
+    repo_policy: derived_allowed
+    quality_notes: Bounded official SDMX query; Census perturbation and product notes apply.
+
+  - source_id: abs_c21_g02_sa2_vic
+    enabled: true
+    publisher: Australian Bureau of Statistics
+    dataset_title: Census 2021 G02 median household income, Victorian SA2
+    metadata_url: https://www.abs.gov.au/census/guide-census-data
+    access_url: "https://data.api.abs.gov.au/rest/data/ABS,C21_G02_SA2,1.0.0/4..SA2.2?startPeriod=2021&endPeriod=2021&dimensionAtObservation=AllDimensions&format=csvfilewithlabels"
+    access_method: sdmx_rest
+    format: csv
+    update_frequency: census_release
+    record_grain: median weekly household income by 2021 Victorian SA2
+    geographic_coverage: Victoria Statistical Areas Level 2
+    query_or_filter: pinned C21_G02_SA2 v1.0.0; measure 4; Victoria SA2 only
+    licence_name: Creative Commons Attribution 4.0 International
+    licence_url: https://creativecommons.org/licenses/by/4.0/
+    attribution_text: Based on Australian Bureau of Statistics 2021 Census data.
+    redistribution_status: allowed
+    third_party_material_policy: selected official ABS observations only
+    repo_policy: derived_allowed
+    quality_notes: Bounded official SDMX query; published household-income exclusions apply.
+
+  - source_id: abs_c21_g37_sa2_vic
+    enabled: true
+    publisher: Australian Bureau of Statistics
+    dataset_title: Census 2021 G37 dwelling tenure, Victorian SA2
+    metadata_url: https://www.abs.gov.au/census/guide-census-data
+    access_url: "https://data.api.abs.gov.au/rest/data/ABS,C21_G37_SA2,1.0.0/1%2B2%2BR_T._T..SA2.2?startPeriod=2021&endPeriod=2021&dimensionAtObservation=AllDimensions&format=csvfilewithlabels"
+    access_method: sdmx_rest
+    format: csv
+    update_frequency: census_release
+    record_grain: selected tenure totals by 2021 Victorian SA2
+    geographic_coverage: Victoria Statistical Areas Level 2
+    query_or_filter: pinned C21_G37_SA2 v1.0.0; owned outright, mortgaged and rented totals; Victoria SA2 only
+    licence_name: Creative Commons Attribution 4.0 International
+    licence_url: https://creativecommons.org/licenses/by/4.0/
+    attribution_text: Based on Australian Bureau of Statistics 2021 Census data.
+    redistribution_status: allowed
+    third_party_material_policy: selected official ABS observations only
+    repo_policy: derived_allowed
+    quality_notes: Bounded official SDMX query; Census perturbation and product notes apply.
+
+  - source_id: rba_f1_interest_rates
+    enabled: true
+    publisher: Reserve Bank of Australia
+    dataset_title: Statistical Table F1 Interest Rates and Yields
+    metadata_url: https://www.rba.gov.au/statistics/tables/
+    access_url: https://www.rba.gov.au/statistics/tables/csv/f1-data.csv
+    access_method: http_file
+    format: csv
+    update_frequency: daily_or_as_published
+    record_grain: series and observation date
+    geographic_coverage: Australia
+    query_or_filter: retain only RBA-authored series; exclude third-party series by default
+    licence_name: RBA Copyright and Disclaimer Notice
+    licence_url: https://www.rba.gov.au/copyright/
+    attribution_text: "Source: Reserve Bank of Australia; no endorsement implied."
+    redistribution_status: restricted
+    third_party_material_policy: exclude unless separately licensed
+    repo_policy: derived_allowed
+    quality_notes: Capture vintage because series can be revised or withdrawn.
+
+  - source_id: abn_lookup_bulk_extract
+    enabled: false
+    publisher: Australian Business Register
+    dataset_title: ABN Lookup public bulk extract
+    metadata_url: https://abr.business.gov.au/Tools/BulkExtract
+    access_url: https://data.gov.au/data/dataset/abn-bulk-extract
+    access_method: metadata_resolved_file
+    format: zip_xml
+    update_frequency: weekly
+    record_grain: one public ABN entity registration
+    geographic_coverage: Australia
+    query_or_filter: active non-individual organisations; minimise fields; exclude sole-trader names
+    licence_name: Creative Commons Attribution 3.0 Australia
+    licence_url: https://creativecommons.org/licenses/by/3.0/au/
+    attribution_text: Contains ABN Lookup data licensed under CC BY 3.0 Australia.
+    redistribution_status: allowed
+    third_party_material_policy: public extract only; never use restricted agency ABR product
+    repo_policy: raw_out_of_git
+    quality_notes: >-
+      Trading Names stopped receiving updates in 2012 and are not identity keys. Optional; deferred
+      and out of scope for the current phase — disabled pending an owner-chosen access path (bulk
+      ZIP vs. authenticated web service) and explicit approval to acquire.
+
+  - source_id: melbourne_clue_business_context
+    enabled: true
+    publisher: City of Melbourne
+    dataset_title: Business establishments and jobs by size and CLUE industry
+    metadata_url: https://discover.data.vic.gov.au/dataset/business-establishments-and-jobs-data-by-business-size-and-clue-industry-in-municipality
+    access_url: "https://data.melbourne.vic.gov.au/api/v2/catalog/datasets/business-establishments-and-jobs-data-by-business-size-and-clue-industry-in-municipality/exports/csv?delimiter=%2C"
+    access_method: opendata_export
+    format: csv
+    update_frequency: annual
+    record_grain: confidentialised aggregate by area, year, size and industry
+    geographic_coverage: City of Melbourne
+    query_or_filter: contextual enrichment only; do not infer named businesses
+    licence_name: Creative Commons Attribution 4.0 International
+    licence_url: https://creativecommons.org/licenses/by/4.0/
+    attribution_text: Contains City of Melbourne CLUE data licensed under CC BY 4.0.
+    redistribution_status: allowed
+    third_party_material_policy: public confidentialised cells only
+    suppression_policy: blank/suppressed cells remain suppressed and are never converted to zero
+    repo_policy: derived_allowed
+    quality_notes: Cells containing two or fewer establishments may be suppressed.
+
+  - source_id: vips_transaction_level_sales
+    enabled: false
+    publisher: Victorian Government GIS service
+    dataset_title: VIPS transaction-level sales map service
+    metadata_url: https://corp-gis.mapshare.vic.gov.au/arcgis/rest/services/VIPS/Sale/MapServer/0
+    access_url: https://corp-gis.mapshare.vic.gov.au/arcgis/rest/services/VIPS/Sale/MapServer/0/query
+    access_method: arcgis_rest
+    format: esri_json
+    update_frequency: unknown
+    record_grain: apparent transaction-level sale record
+    geographic_coverage: Victoria, Australia
+    query_or_filter: disabled
+    licence_name: Unverified
+    licence_url: null
+    attribution_text: null
+    redistribution_status: unverified
+    third_party_material_policy: do not fetch or republish without a clear open-data record or written permission
+    repo_policy: prohibited
+    quality_notes: Technical accessibility is not permission; this source is a hard policy gate.

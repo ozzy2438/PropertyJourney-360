@@ -1,0 +1,38 @@
+ruleset_version: dq-v1.0.0
+record_dispositions:
+  - ACCEPTED
+  - QUARANTINED
+  - REJECTED
+  - DUPLICATE
+publication_gates:
+  reconciliation:
+    equation: source = accepted + quarantined + rejected + explained_duplicates
+    required_difference: 0
+  critical_invalid_curated:
+    maximum: 0
+  schema_contract:
+    required: true
+controls:
+  email:
+    severity: ERROR
+    invalid_disposition: QUARANTINED
+  source_record_id:
+    severity: CRITICAL
+    invalid_disposition: REJECTED
+  orphan_reference:
+    severity: ERROR
+    invalid_disposition: QUARANTINED
+  duplicate_ingestion_key:
+    severity: INFO
+    invalid_disposition: DUPLICATE
+  unsupported_schema_version:
+    severity: CRITICAL
+    invalid_disposition: QUARANTINED
+remediation_lifecycle:
+  - OPEN
+  - IN_REVIEW
+  - RESOLVED
+  - REPLAYED
+  - VERIFIED
+  - CLOSED
+
